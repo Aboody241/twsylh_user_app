@@ -33,9 +33,11 @@ class PickMapScreen extends StatefulWidget {
   final Function(AddressModel address)? onPicked;
   final bool fromLandingPage;
   final bool fromGuestCheckout;
+  final String? title;
   const PickMapScreen({super.key,
     required this.fromSignUp, required this.fromAddAddress, required this.canRoute,
     required this.route, this.googleMapController, this.onPicked, this.fromLandingPage = false, this.fromGuestCheckout = false,
+    this.title,
   });
 
   @override
@@ -74,7 +76,15 @@ class _PickMapScreenState extends State<PickMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ResponsiveHelper.isDesktop(context) ? Colors.transparent : Theme.of(context).cardColor,
-      appBar: widget.fromGuestCheckout && !ResponsiveHelper.isDesktop(context) ? CustomAppBar(title: 'delivery_address'.tr) : null,
+      appBar: !ResponsiveHelper.isDesktop(context) ? CustomAppBar(
+        title: widget.title ?? (widget.fromGuestCheckout
+            ? 'delivery_address'.tr
+            : widget.fromAddAddress
+                ? 'pick_address'.tr
+                : 'pick_location'.tr),
+        backButton: true,
+        onBackPressed: () => Get.back(),
+      ) : null,
       endDrawer: const MenuDrawer(),endDrawerEnableOpenDragGesture: false,
       body: SafeArea(child: Center(child: Container(
         height:  ResponsiveHelper.isDesktop(context) ? 600 : null,
@@ -238,7 +248,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
             )),
 
             Positioned(
-              top: Dimensions.paddingSizeLarge, left: Dimensions.paddingSizeSmall, right: Dimensions.paddingSizeSmall,
+              top: Dimensions.paddingSizeSmall, left: Dimensions.paddingSizeSmall, right: Dimensions.paddingSizeSmall,
               child: SearchLocationWidget(mapController: _mapController, pickedAddress: locationController.pickAddress, isEnabled: null),
             ),
 

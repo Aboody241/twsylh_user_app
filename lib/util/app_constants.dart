@@ -17,7 +17,7 @@ class AppConstants {
   static const String pusherBroadcustUrl = '/api/v1/broadcasting/user-auth';
 
   static const String supportAddress = 'assuit - Egypt';
-  static const String supportPhone = '+20 1134 7053 83';
+  static const String supportPhone = '83 7053 1134 +20';
   static const String supportEmail = 'ounabdallah2126@gmail.com';
   static const String defaultCountry = 'EG';
   static const String defaultCountryCode = '+20';
