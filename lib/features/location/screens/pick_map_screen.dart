@@ -23,6 +23,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:twsylh_user/features/location/widgets/serach_location_widget.dart';
+import 'package:twsylh_user/common/widgets/custom_loader.dart';
+import 'package:twsylh_user/features/home/screens/home_screen.dart';
+import 'package:twsylh_user/features/location/domain/models/zone_response_model.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 
 class PickMapScreen extends StatefulWidget {
   final bool fromSignUp;
@@ -84,6 +88,13 @@ class _PickMapScreenState extends State<PickMapScreen> {
                 : 'pick_location'.tr),
         backButton: true,
         onBackPressed: () => Get.back(),
+        menuWidget: TextButton(
+          onPressed: () => _onSkipPressed(Get.find<LocationController>()),
+          child: Text('skip'.tr, style: robotoBold.copyWith(
+            color: Theme.of(context).primaryColor,
+            fontSize: Dimensions.fontSizeDefault,
+          )),
+        ),
       ) : null,
       endDrawer: const MenuDrawer(),endDrawerEnableOpenDragGesture: false,
       body: SafeArea(child: Center(child: Container(
@@ -304,34 +315,50 @@ class _PickMapScreenState extends State<PickMapScreen> {
 
             Positioned(
               bottom: Dimensions.paddingSizeLarge, left: Dimensions.paddingSizeLarge, right: Dimensions.paddingSizeLarge,
-              child: InkWell(
-                highlightColor: Colors.transparent,
-                splashColor: Colors.transparent,
-                  onTap: locationController.isLoading ? (){} : (locationController.buttonDisabled || locationController.loading) ? null : () {
-                    _onPickAddressButtonPressed(locationController);
-                  },
-                // onTap: (locationController.buttonDisabled || locationController.loading) ? null : () => _onPickAddressButtonPressed(locationController),
-                child: Builder(
-                  builder: (context) {
-                    print('======Button Disabled: ${locationController.buttonDisabled}, Loading: ${locationController.loading}');
-                    return Container(
-                      padding: EdgeInsets.all(locationController.loading ? Dimensions.paddingSizeExtraSmall : Dimensions.paddingSizeDefault - 2),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: locationController.loading ? Theme.of(context).primaryColor.withValues(alpha: 0.8)
-                            : locationController.buttonDisabled ? Theme.of(context).disabledColor.withValues(alpha: 0.7)
-                            : Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      ),
-                      child: locationController.loading ? Center(
-                        child: LoadingAnimationWidget.waveDots(color: Colors.white, size: 40),
-                      ) : Text(
-                        locationController.inZone ? widget.fromAddAddress ? 'pick_address'.tr : widget.fromGuestCheckout ? 'confirm_address'.tr : 'pick_location'.tr : 'service_not_available_in_this_area'.tr,
-                        style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Colors.white),
-                      ),
-                    );
-                  }
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    highlightColor: Colors.transparent,
+                    splashColor: Colors.transparent,
+                    onTap: locationController.isLoading ? (){} : (locationController.buttonDisabled || locationController.loading) ? null : () {
+                      _onPickAddressButtonPressed(locationController);
+                    },
+                    child: Builder(
+                      builder: (context) {
+                        return Container(
+                          padding: EdgeInsets.all(locationController.loading ? Dimensions.paddingSizeExtraSmall : Dimensions.paddingSizeDefault - 2),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: locationController.loading ? Theme.of(context).primaryColor.withValues(alpha: 0.8)
+                                : locationController.buttonDisabled ? Theme.of(context).disabledColor.withValues(alpha: 0.7)
+                                : Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                          ),
+                          child: locationController.loading ? Center(
+                            child: LoadingAnimationWidget.waveDots(color: Colors.white, size: 40),
+                          ) : Text(
+                            locationController.inZone ? widget.fromAddAddress ? 'pick_address'.tr : widget.fromGuestCheckout ? 'confirm_address'.tr : 'pick_location'.tr : 'service_not_available_in_this_area'.tr,
+                            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Colors.white),
+                          ),
+                        );
+                      }
+                    ),
+                  ),
+
+                  if(!locationController.inZone) ...[
+                    const SizedBox(height: Dimensions.paddingSizeSmall),
+                    CustomButton(
+                      buttonText: 'skip'.tr,
+                      color: Theme.of(context).cardColor,
+                      textColor: Theme.of(context).primaryColor,
+                      radius: Dimensions.radiusDefault,
+                      isBorder: true,
+                      height: 45,
+                      onPressed: () => _onSkipPressed(locationController),
+                    ),
+                  ],
+                ],
               ),
             ),
           ]);
@@ -394,6 +421,74 @@ class _PickMapScreenState extends State<PickMapScreen> {
       }
     }else {
       showCustomSnackBar('pick_an_address'.tr);
+    }
+  }
+
+  void _onSkipPressed(LocationController locationController) async {
+    if (widget.onPicked != null) {
+      Get.back();
+      return;
+    }
+    if (widget.fromAddAddress) {
+      Get.back();
+      return;
+    }
+    if (widget.fromGuestCheckout) {
+      Get.back();
+      return;
+    }
+    if (AddressHelper.getUserAddressFromSharedPref() != null) {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      if (Navigator.canPop(context)) {
+        Get.back();
+      } else {
+        Get.offAllNamed(RouteHelper.getInitialRoute());
+      }
+      return;
+    }
+
+    Get.dialog(const CustomLoaderWidget(), barrierDismissible: false);
+    try {
+      final config = Get.find<SplashController>().configModel;
+      final defaultLat = config?.defaultLocation?.lat ?? '30.017389242641205';
+      final defaultLng = config?.defaultLocation?.lng ?? '31.2501819352916';
+      final defaultAddressStr = config?.address ?? AppConstants.supportAddress;
+
+      AddressModel defaultAddress = AddressModel(
+        latitude: defaultLat,
+        longitude: defaultLng,
+        addressType: 'others',
+        address: defaultAddressStr,
+      );
+
+      ZoneResponseModel zoneResponse = await locationController.getZone(defaultLat, defaultLng, false);
+      if (zoneResponse.isSuccess) {
+        defaultAddress.zoneIds = zoneResponse.zoneIds;
+        defaultAddress.zoneData = zoneResponse.zoneData;
+        defaultAddress.areaIds = zoneResponse.areaIds;
+        defaultAddress.zoneId = zoneResponse.zoneIds.isNotEmpty ? zoneResponse.zoneIds[0] : null;
+      }
+
+      await AddressHelper.saveUserAddressInSharedPref(defaultAddress);
+      HomeScreen.loadData(true);
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      if (widget.fromSignUp) {
+        Get.offAllNamed(RouteHelper.getInitialRoute());
+      } else if (widget.route != null && widget.canRoute) {
+        Get.offNamed(widget.route!);
+      } else {
+        Get.offAllNamed(RouteHelper.getInitialRoute());
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      Get.offAllNamed(RouteHelper.getInitialRoute());
     }
   }
 
