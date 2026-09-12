@@ -16,6 +16,12 @@ class AppConstants {
   static const String googleServerClientId = '776285847170-bslrerr6tjinijqelmci21i81ejtr43n.apps.googleusercontent.com';
   static const String pusherBroadcustUrl = '/api/v1/broadcasting/user-auth';
 
+  static const String supportAddress = 'assuit - Egypt';
+  static const String supportPhone = '+20 1134 7053 83';
+  static const String supportEmail = 'ounabdallah2126@gmail.com';
+  static const String defaultCountry = 'EG';
+  static const String defaultCountryCode = '+20';
+
   static const String baseUrl = 'https://twsylh.com';
   static const String categoryUri = '/api/v1/categories';
   static const String bannerUri = '/api/v1/banners';

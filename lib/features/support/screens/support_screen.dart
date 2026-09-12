@@ -1,6 +1,7 @@
 import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
 import 'package:twsylh_user/features/support/widgets/web_help_support_widget.dart';
 import 'package:twsylh_user/helper/responsive_helper.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 import 'package:twsylh_user/util/dimensions.dart';
 import 'package:twsylh_user/util/images.dart';
 import 'package:twsylh_user/common/widgets/custom_app_bar.dart';
@@ -43,19 +44,20 @@ class _SupportScreenState extends State<SupportScreen> {
 
             SupportButtonWidget(
               icon: Icons.location_on, title: 'address'.tr, color: Colors.blue,
-              info: Get.find<SplashController>().configModel!.address,
+              info: Get.find<SplashController>().configModel?.address ?? AppConstants.supportAddress,
               onTap: () {},
             ),
             const SizedBox(height: Dimensions.paddingSizeSmall),
 
             SupportButtonWidget(
               icon: Icons.call, title: 'call'.tr, color: Colors.red,
-              info: Get.find<SplashController>().configModel!.phone,
+              info: Get.find<SplashController>().configModel?.phone ?? AppConstants.supportPhone,
               onTap: () async {
-                if(await canLaunchUrlString('tel:${Get.find<SplashController>().configModel!.phone}')) {
-                  launchUrlString('tel:${Get.find<SplashController>().configModel!.phone}');
+                final String phone = Get.find<SplashController>().configModel?.phone ?? AppConstants.supportPhone;
+                if(await canLaunchUrlString('tel:$phone')) {
+                  launchUrlString('tel:$phone');
                 }else {
-                  showCustomSnackBar('${'can_not_launch'.tr} ${Get.find<SplashController>().configModel!.phone}');
+                  showCustomSnackBar('${'can_not_launch'.tr} $phone');
                 }
               },
             ),
@@ -63,11 +65,12 @@ class _SupportScreenState extends State<SupportScreen> {
 
             SupportButtonWidget(
               icon: Icons.mail_outline, title: 'email_us'.tr, color: Colors.green,
-              info: Get.find<SplashController>().configModel!.email,
+              info: Get.find<SplashController>().configModel?.email ?? AppConstants.supportEmail,
               onTap: () {
+                final String email = Get.find<SplashController>().configModel?.email ?? AppConstants.supportEmail;
                 final Uri emailLaunchUri = Uri(
                   scheme: 'mailto',
-                  path: Get.find<SplashController>().configModel!.email,
+                  path: email,
                 );
                 launchUrlString(emailLaunchUri.toString());
               },

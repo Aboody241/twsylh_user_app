@@ -63,7 +63,7 @@ class _SignInViewState extends State<SignInView> {
         String otpCountryCode = authController.getOtpUserCountryCode();
         _countryDialCode = otpCountryCode.isNotEmpty
             ? otpCountryCode
-            : CountryCode.fromCountryCode(splashController.configModel!.country!).dialCode;
+            : CountryCode.fromCountryCode(splashController.configModel?.country ?? "EG").dialCode ?? "+20";
         _phoneController.text = otpNumber;
       } else {
         // Pre-fill from manual-specific storage
@@ -71,7 +71,7 @@ class _SignInViewState extends State<SignInView> {
         String manualCountryCode = authController.getUserCountryCode();
         _countryDialCode = manualCountryCode.isNotEmpty
             ? manualCountryCode
-            : CountryCode.fromCountryCode(splashController.configModel!.country!).dialCode;
+            : CountryCode.fromCountryCode(splashController.configModel?.country ?? "EG").dialCode ?? "+20";
         _phoneController.text = manualNumber;
         _passwordController.text = authController.getUserPassword();
       }

@@ -1,4 +1,5 @@
 import 'package:twsylh_user/common/models/module_model.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 
 class ConfigModel {
   String? businessName;
@@ -127,10 +128,10 @@ class ConfigModel {
   ConfigModel({
     this.businessName,
     this.logoFullUrl,
-    this.address,
-    this.phone,
-    this.email,
-    this.country,
+    this.address = AppConstants.supportAddress,
+    this.phone = AppConstants.supportPhone,
+    this.email = AppConstants.supportEmail,
+    this.country = AppConstants.defaultCountry,
     this.defaultLocation,
     this.currencySymbol,
     this.currencySymbolDirection,
@@ -250,10 +251,10 @@ class ConfigModel {
   ConfigModel.fromJson(Map<String, dynamic> json) {
     businessName = json['business_name'];
     logoFullUrl = json['logo_full_url'];
-    address = json['address'];
-    phone = json['phone'];
-    email = json['email'];
-    country = json['country'];
+    address = AppConstants.supportAddress;
+    phone = AppConstants.supportPhone;
+    email = AppConstants.supportEmail;
+    country = json['country'] ?? AppConstants.defaultCountry;
     defaultLocation = json['default_location'] != null ? DefaultLocation.fromJson(json['default_location']) : null;
     currencySymbol = json['currency_symbol'];
     currencySymbolDirection = json['currency_symbol_direction'];

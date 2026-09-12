@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 import 'package:twsylh_user/util/dimensions.dart';
 import 'package:twsylh_user/util/images.dart';
 import 'package:twsylh_user/util/styles.dart';
@@ -54,12 +55,13 @@ class WebSupportScreen extends StatelessWidget {
                               icon: Icons.call,
                               title: 'call_customer_support'.tr,
                               subtitle: 'talk_with_our_customer_support_executive_at_any_time'.tr,
-                              mainText: Get.find<SplashController>().configModel!.phone!,
+                              mainText: Get.find<SplashController>().configModel?.phone ?? AppConstants.supportPhone,
                               onActionPressed: () async {
-                                if (await canLaunchUrlString('tel:${Get.find<SplashController>().configModel!.phone}')) {
-                                  launchUrlString('tel:${Get.find<SplashController>().configModel!.phone}', mode: LaunchMode.externalApplication);
+                                final String phone = Get.find<SplashController>().configModel?.phone ?? AppConstants.supportPhone;
+                                if (await canLaunchUrlString('tel:$phone')) {
+                                  launchUrlString('tel:$phone', mode: LaunchMode.externalApplication);
                                 } else {
-                                  showCustomSnackBar('${'can_not_launch'.tr} ${Get.find<SplashController>().configModel!.phone}');
+                                  showCustomSnackBar('${'can_not_launch'.tr} $phone');
                                 }
                               }
                             ),
@@ -68,10 +70,11 @@ class WebSupportScreen extends StatelessWidget {
                               icon: Icons.email,
                               title: 'send_us_email_through'.tr,
                               subtitle: 'typically_the_support_team_send_you_any_feedback_in_2_hours'.tr,
-                              mainText: Get.find<SplashController>().configModel!.email!,
+                              mainText: Get.find<SplashController>().configModel?.email ?? AppConstants.supportEmail,
                               onActionPressed: () {
+                                final String email = Get.find<SplashController>().configModel?.email ?? AppConstants.supportEmail;
                                 final Uri emailLaunchUri = Uri(scheme: 'mailto',
-                                  path: Get.find<SplashController>().configModel!.email,
+                                  path: email,
                                 );
                                 launchUrlString(emailLaunchUri.toString(), mode: LaunchMode.externalApplication);
                               },
@@ -80,7 +83,7 @@ class WebSupportScreen extends StatelessWidget {
                             CustomCard(
                               icon: Icons.location_on,
                               title: 'address'.tr,
-                              mainText: Get.find<SplashController>().configModel!.address!,
+                              mainText: Get.find<SplashController>().configModel?.address ?? AppConstants.supportAddress,
                               onActionPressed:() async {}
                             ),
                           ]),

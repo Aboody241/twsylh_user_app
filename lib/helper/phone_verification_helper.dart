@@ -21,14 +21,14 @@ class PhoneVerificationHelper {
         Get.find<LocationController>().countryDialCode = "+${phoneNumber.countryCode}";
         return phoneNumber.nsn.toString();
       }else if(isValid && fromAuthPage == true){
-        Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "BD").dialCode!;
+        Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "EG").dialCode ?? "+20";
         return phoneNumber.nsn.toString();
       }else{
-        Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "BD").dialCode!;
+        Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "EG").dialCode ?? "+20";
         return "";
       }
     } catch (e) {
-      Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "BD").dialCode!;
+      Get.find<LocationController>().countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel?.country ?? "EG").dialCode ?? "+20";
       debugPrint('Phone Number is not parsing: $e');
       return "";
     }

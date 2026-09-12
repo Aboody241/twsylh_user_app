@@ -4,6 +4,7 @@ import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
 import 'package:twsylh_user/common/models/config_model.dart';
 import 'package:twsylh_user/helper/responsive_helper.dart';
 import 'package:twsylh_user/helper/route_helper.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 import 'package:twsylh_user/util/dimensions.dart';
 import 'package:twsylh_user/util/images.dart';
 import 'package:twsylh_user/util/styles.dart';
@@ -228,12 +229,12 @@ class _FooterViewState extends State<FooterView> {
 
                           InkWell(
                             onTap: () async {
-                              String url = 'mailto:${_config.email ?? ''}';
+                              String url = 'mailto:${_config.email ?? AppConstants.supportEmail}';
                               if(await canLaunchUrlString(url)) {
                                 _launchURL(url);
                               }
                             },
-                            child: Text(_config.email ?? '', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall)),
+                            child: Text(_config.email ?? AppConstants.supportEmail, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall)),
                           ),
 
                         ]),
@@ -246,7 +247,7 @@ class _FooterViewState extends State<FooterView> {
                           Text('contact_us'.tr, style: robotoBold),
                           const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                          Text(_config.phone ?? '', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall)),
+                          Text(_config.phone ?? AppConstants.supportPhone, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall)),
 
                         ]),
 
@@ -261,7 +262,7 @@ class _FooterViewState extends State<FooterView> {
                           SizedBox(
                             width: 200,
                             child: Text(
-                              _config.address ?? '',
+                              _config.address ?? AppConstants.supportAddress,
                               textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
                               style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall),
                             ),
