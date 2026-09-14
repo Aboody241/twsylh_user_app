@@ -451,10 +451,9 @@ class _PickMapScreenState extends State<PickMapScreen> {
 
     Get.dialog(const CustomLoaderWidget(), barrierDismissible: false);
     try {
-      final config = Get.find<SplashController>().configModel;
-      final defaultLat = config?.defaultLocation?.lat ?? '30.017389242641205';
-      final defaultLng = config?.defaultLocation?.lng ?? '31.2501819352916';
-      final defaultAddressStr = config?.address ?? AppConstants.supportAddress;
+      final defaultLat = AppConstants.defaultLatitude;
+      final defaultLng = AppConstants.defaultLongitude;
+      final defaultAddressStr = AppConstants.supportAddress;
 
       AddressModel defaultAddress = AddressModel(
         latitude: defaultLat,

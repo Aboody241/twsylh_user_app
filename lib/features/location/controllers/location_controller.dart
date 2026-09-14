@@ -212,15 +212,28 @@ class LocationController extends GetxController implements GetxService {
       return;
     }
 
-    ZoneResponseModel response = await getZone(AddressHelper.getUserAddressFromSharedPref()?.latitude??'0', AddressHelper.getUserAddressFromSharedPref()?.longitude??'0', false, updateInAddress: true);
+    AddressModel? address = AddressHelper.getUserAddressFromSharedPref();
+    String lat = address?.latitude ?? AppConstants.defaultLatitude;
+    String lng = address?.longitude ?? AppConstants.defaultLongitude;
+
+    if (lat == '30.017389242641205' || (address?.zoneIds != null && address!.zoneIds!.length == 1 && address.zoneIds![0] == 1)) {
+      lat = AppConstants.defaultLatitude;
+      lng = AppConstants.defaultLongitude;
+      if (address != null) {
+        address.latitude = lat;
+        address.longitude = lng;
+      }
+    }
+
+    ZoneResponseModel response = await getZone(lat, lng, false, updateInAddress: true);
 
     if(response.zoneIds.isEmpty) {
       print('====zone ids is empty==================');
       // await AddressHelper.saveUserAddressInSharedPref(AddressModel());
       // Get.toNamed(RouteHelper.getAccessLocationRoute(RouteHelper.splash));
     } else {
-      AddressModel? address = AddressHelper.getUserAddressFromSharedPref();
       if(address != null) {
+        bool zoneChanged = address.zoneId != response.zoneIds[0];
         address.zoneId = response.zoneIds[0];
         address.zoneIds = [];
         address.zoneIds!.addAll(response.zoneIds);
@@ -229,6 +242,11 @@ class LocationController extends GetxController implements GetxService {
         address.areaIds = [];
         address.areaIds!.addAll(response.areaIds);
         await AddressHelper.saveUserAddressInSharedPref(address);
+
+        if(zoneChanged || (Get.find<SplashController>().moduleList != null && Get.find<SplashController>().moduleList!.length > 1 && Get.find<SplashController>().module != null)) {
+          Get.find<SplashController>().removeModule();
+          await Get.find<SplashController>().getModules();
+        }
       }
     }
     update();

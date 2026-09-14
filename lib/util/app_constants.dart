@@ -21,6 +21,8 @@ class AppConstants {
   static const String supportEmail = 'ounabdallah2126@gmail.com';
   static const String defaultCountry = 'EG';
   static const String defaultCountryCode = '+20';
+  static const String defaultLatitude = '27.28';
+  static const String defaultLongitude = '31.28';
 
   static const String baseUrl = 'https://twsylh.com';
   static const String categoryUri = '/api/v1/categories';

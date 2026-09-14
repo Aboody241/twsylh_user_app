@@ -255,7 +255,7 @@ class ConfigModel {
     phone = AppConstants.supportPhone;
     email = AppConstants.supportEmail;
     country = json['country'] ?? AppConstants.defaultCountry;
-    defaultLocation = json['default_location'] != null ? DefaultLocation.fromJson(json['default_location']) : null;
+    defaultLocation = DefaultLocation(lat: AppConstants.defaultLatitude, lng: AppConstants.defaultLongitude);
     currencySymbol = json['currency_symbol'];
     currencySymbolDirection = json['currency_symbol_direction'];
     appMinimumVersionAndroid = json['app_minimum_version_android']?.toDouble() ?? 0.0;
