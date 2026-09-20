@@ -900,6 +900,8 @@ class RouteHelper {
     }
     return (AppConstants.appVersion < minimumVersion! && !GetPlatform.isWeb) ? const UpdateScreen(isUpdate: true)
         : Get.find<SplashController>().configModel!.maintenanceMode! ? const UpdateScreen(isUpdate: false)
+        : !AuthHelper.isLoggedIn()
+        ? const SignInScreen(exitFromApp: true, backFromThis: false)
         : (AddressHelper.getUserAddressFromSharedPref() == null && !byPuss)
         ? AccessLocationScreen(fromSignUp: false, fromHome: false, route: Get.currentRoute) : navigateTo;
   }

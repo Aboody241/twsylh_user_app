@@ -2,7 +2,6 @@ import 'package:twsylh_user/features/cart/controllers/cart_controller.dart';
 import 'package:twsylh_user/features/favourite/controllers/favourite_controller.dart';
 import 'package:twsylh_user/features/chat/domain/models/conversation_model.dart';
 import 'package:twsylh_user/common/models/response_model.dart';
-import 'package:twsylh_user/features/location/controllers/location_controller.dart';
 import 'package:twsylh_user/features/profile/domain/models/update_user_model.dart';
 import 'package:twsylh_user/features/profile/domain/models/userinfo_model.dart';
 import 'package:get/get.dart';
@@ -151,7 +150,7 @@ class ProfileController extends GetxController implements GetxService {
       setForceFullyUserEmpty();
       showCustomSnackBar('your_account_remove_successfully'.tr, isError: false);
       _isLoading = false;
-      Get.find<LocationController>().navigateToLocationScreen('splash', offNamed: true);
+      Get.offAllNamed(RouteHelper.getSignInRoute(RouteHelper.splash));
     } else {
       _isLoading = false;
       Get.back();

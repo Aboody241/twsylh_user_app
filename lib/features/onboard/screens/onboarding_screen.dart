@@ -1,8 +1,8 @@
-import 'package:twsylh_user/features/auth/controllers/auth_controller.dart';
 import 'package:twsylh_user/features/location/controllers/location_controller.dart';
 import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
 import 'package:twsylh_user/features/onboard/controllers/onboard_controller.dart';
 import 'package:twsylh_user/helper/address_helper.dart';
+import 'package:twsylh_user/helper/auth_helper.dart';
 import 'package:twsylh_user/helper/responsive_helper.dart';
 import 'package:twsylh_user/helper/route_helper.dart';
 import 'package:twsylh_user/util/dimensions.dart';
@@ -139,13 +139,16 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
 
   void _configureToRouteInitialPage() async {
     Get.find<SplashController>().disableIntro();
-    await Get.find<AuthController>().guestLogin();
-    if (AddressHelper.getUserAddressFromSharedPref() != null) {
-      Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
+    if (AuthHelper.isLoggedIn()) {
+      if (AddressHelper.getUserAddressFromSharedPref() != null) {
+        Get.offNamed(RouteHelper.getInitialRoute(fromSplash: true));
+      } else {
+        Get.find<LocationController>().navigateToLocationScreen(RouteHelper.onBoarding, offNamed: true).then((v) {
+          _pageController.jumpToPage(Get.find<OnBoardingController>().onBoardingList.length-2);
+        });
+      }
     } else {
-      Get.find<LocationController>().navigateToLocationScreen(RouteHelper.onBoarding, offNamed: true).then((v) {
-        _pageController.jumpToPage(Get.find<OnBoardingController>().onBoardingList.length-2);
-      });
+      Get.offNamed(RouteHelper.getSignInRoute(RouteHelper.onBoarding));
     }
   }
 }

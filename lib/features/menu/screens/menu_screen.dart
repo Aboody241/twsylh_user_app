@@ -335,8 +335,7 @@ class _MenuScreenState extends State<MenuScreen> {
                       if(Get.find<SplashController>().module != null) {
                         Get.find<TaxiCartController>().getCarCartList();
                       }
-                      // Get.offAllNamed(RouteHelper.getInitialRoute());
-                      Get.back();
+                      Get.offAllNamed(RouteHelper.getSignInRoute(RouteHelper.splash));
                       showCustomSnackBar('logout_successful'.tr, isError: false);
                     }), useSafeArea: false);
                   }else {

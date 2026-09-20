@@ -9,7 +9,7 @@ class ApiChecker {
     if(response.statusCode == 401) {
       Get.find<AuthController>().clearSharedData(removeToken: false).then((value) {
         Get.find<FavouriteController>().removeFavourite();
-        Get.offAllNamed(RouteHelper.getInitialRoute());
+        Get.offAllNamed(RouteHelper.getSignInRoute(RouteHelper.splash));
       });
     }else {
       if(response.statusText != 'The guest id field is required.') {
