@@ -380,6 +380,7 @@ class SocialLoginButton extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          textDirection: TextDirection.ltr,
           children: <Widget>[
 
             Image.asset(iconPath, height: 24, width: 24),

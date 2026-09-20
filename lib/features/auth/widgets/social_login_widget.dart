@@ -72,7 +72,7 @@ class SocialLoginWidget extends StatelessWidget {
                 radius: Dimensions.radiusDefault,
                 child: Padding(
                   padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, textDirection: TextDirection.ltr, children: [
                     Image.asset(Images.google, height: 20, width: 20),
                     const SizedBox(width: Dimensions.paddingSizeSmall),
 
@@ -96,7 +96,7 @@ class SocialLoginWidget extends StatelessWidget {
                 radius: Dimensions.radiusDefault,
                 child: Padding(
                   padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, textDirection: TextDirection.ltr, children: [
                     Image.asset(Images.socialFacebook, height: 20, width: 20),
                     const SizedBox(width: Dimensions.paddingSizeSmall),
 
@@ -120,7 +120,7 @@ class SocialLoginWidget extends StatelessWidget {
                 radius: Dimensions.radiusDefault,
                 child: Padding(
                   padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, textDirection: TextDirection.ltr, children: [
                     Image.asset(Images.appleLogo, height: 20, width: 20),
                     const SizedBox(width: Dimensions.paddingSizeSmall),
 
