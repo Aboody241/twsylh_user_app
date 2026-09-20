@@ -33,14 +33,17 @@ class ModuleView extends StatelessWidget {
       SizedBox(height: Dimensions.paddingSizeDefault),
 
       splashController.moduleList != null ? splashController.moduleList!.isNotEmpty ? GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, mainAxisSpacing: Dimensions.paddingSizeSmall,
-          crossAxisSpacing: Dimensions.paddingSizeSmall, childAspectRatio: (1/1),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: splashController.moduleList!.length <= 2 ? 2 : 3,
+          mainAxisSpacing: Dimensions.paddingSizeSmall,
+          crossAxisSpacing: Dimensions.paddingSizeSmall,
+          childAspectRatio: splashController.moduleList!.length <= 2 ? 1.05 : (1/1),
         ),
         padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
         itemCount: splashController.moduleList!.length,
         shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         itemBuilder: (context, index) {
+          final bool isTwoColumns = splashController.moduleList!.length <= 2;
           return Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
@@ -57,15 +60,18 @@ class ModuleView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                   child: CustomImage(
                     image: '${splashController.moduleList![index].iconFullUrl}',
-                    height: 50, width: 50,
+                    height: isTwoColumns ? 65 : 50,
+                    width: isTwoColumns ? 65 : 50,
                   ),
                 ),
-                const SizedBox(height: Dimensions.paddingSizeSmall),
+                SizedBox(height: isTwoColumns ? Dimensions.paddingSizeDefault : Dimensions.paddingSizeSmall),
 
                 Center(child: Text(
                   splashController.moduleList![index].moduleName!,
                   textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall),
+                  style: robotoBold.copyWith(
+                    fontSize: isTwoColumns ? Dimensions.fontSizeDefault : Dimensions.fontSizeSmall,
+                  ),
                 )),
 
               ]),
@@ -152,11 +158,11 @@ class ModuleShimmer extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, mainAxisSpacing: Dimensions.paddingSizeSmall,
-        crossAxisSpacing: Dimensions.paddingSizeSmall, childAspectRatio: (1/1),
+        crossAxisCount: 2, mainAxisSpacing: Dimensions.paddingSizeSmall,
+        crossAxisSpacing: Dimensions.paddingSizeSmall, childAspectRatio: 1.05,
       ),
       padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-      itemCount: 6,
+      itemCount: 2,
       shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         return Container(
@@ -171,7 +177,7 @@ class ModuleShimmer extends StatelessWidget {
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
 
               Container(
-                height: 50, width: 50,
+                height: 65, width: 65,
                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.radiusSmall), color: Colors.grey[300]),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),

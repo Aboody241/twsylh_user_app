@@ -88,6 +88,9 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
   String? _senderCountryDialCode;
   String? _receiverCountryDialCode;
 
+  // ── Form key for validation ──
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -203,7 +206,9 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: GetBuilder<AddressController>(builder: (addressController) {
+                child: Form(
+                  key: _formKey,
+                  child: GetBuilder<AddressController>(builder: (addressController) {
                   return Column(children: [
 
                     // ════════════════════════════════
@@ -241,6 +246,13 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
                           focusNode: _orderNoteNode,
                           nextFocus: _senderNameNode,
                           inputAction: TextInputAction.newline,
+                          required: true,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'additional_instructions_for_driver'.tr;
+                            }
+                            return null;
+                          },
                         ),
                       ]),
                     ),
@@ -264,6 +276,7 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
 
                   ]);
                 }),
+                ),
               ),
             ),
 
@@ -567,6 +580,13 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
           focusNode: streetNode,
           nextFocus: houseNode,
           controller: streetCtrl,
+          required: true,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'street_number'.tr;
+            }
+            return null;
+          },
         ),
         const SizedBox(height: Dimensions.paddingSizeLarge),
 
@@ -579,6 +599,13 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
             focusNode: houseNode,
             nextFocus: floorNode,
             controller: houseCtrl,
+            required: true,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'house'.tr;
+              }
+              return null;
+            },
           )),
           const SizedBox(width: Dimensions.paddingSizeSmall),
           Expanded(child: CustomTextField(
@@ -588,6 +615,13 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
             focusNode: floorNode,
             nextFocus: nameNode,
             controller: floorCtrl,
+            required: true,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'floor'.tr;
+              }
+              return null;
+            },
           )),
         ]),
       ]),
@@ -626,6 +660,12 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
           nextFocus: phoneNode,
           controller: nameCtrl,
           required: true,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return isSender ? 'enter_sender_name'.tr : 'enter_receiver_name'.tr;
+            }
+            return null;
+          },
         ),
         const SizedBox(height: Dimensions.paddingSizeLarge),
 
@@ -639,6 +679,12 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
           nextFocus: AuthHelper.isGuestLoggedIn() ? guestEmailNode : null,
           isPhone: true,
           required: true,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return isSender ? 'enter_sender_phone_number'.tr : 'enter_receiver_phone_number'.tr;
+            }
+            return null;
+          },
           onCountryChanged: (CountryCode code) {
             parcelController.setCountryCode(code.dialCode!, isSender);
             if (isSender) {
@@ -682,6 +728,9 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
         width: ResponsiveHelper.isDesktop(context) ? 200 : double.infinity,
         buttonText: 'save_and_continue'.tr,
         onPressed: () async {
+          // ── Inline form validation ──
+          if (!(_formKey.currentState?.validate() ?? true)) return;
+
           // ── Validate Sender ──
           String senderNum = '${parcelController.senderCountryCode ?? ''}${_senderPhoneController.text.trim()}';
           PhoneValid senderValid = await CustomValidator.isPhoneValid(senderNum);
@@ -689,10 +738,6 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
 
           if (parcelController.pickupAddress == null) {
             showCustomSnackBar('select_pickup_address'.tr); return;
-          } else if (_senderNameController.text.isEmpty) {
-            showCustomSnackBar('enter_sender_name'.tr); return;
-          } else if (_senderPhoneController.text.isEmpty) {
-            showCustomSnackBar('enter_sender_phone_number'.tr); return;
           } else if (!senderValid.isValid) {
             showCustomSnackBar('invalid_phone_number'.tr); return;
           } else if (AuthHelper.isGuestLoggedIn() && _guestSenderEmailController.text.isEmpty) {

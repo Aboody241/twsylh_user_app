@@ -243,7 +243,7 @@ class LocationController extends GetxController implements GetxService {
         address.areaIds!.addAll(response.areaIds);
         await AddressHelper.saveUserAddressInSharedPref(address);
 
-        if(zoneChanged || (Get.find<SplashController>().moduleList != null && Get.find<SplashController>().moduleList!.length > 1 && Get.find<SplashController>().module != null)) {
+        if(zoneChanged) {
           Get.find<SplashController>().removeModule();
           await Get.find<SplashController>().getModules();
         }
@@ -432,9 +432,15 @@ class LocationController extends GetxController implements GetxService {
           }
         });
       } else {
+        if (Get.isDialogOpen ?? false) {
+          Get.back();
+        }
         locationServiceInterface.handleRoute(fromSignUp, route, canRoute);
       }
     } else {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
       locationServiceInterface.handleRoute(fromSignUp, route, canRoute);
     }
   }

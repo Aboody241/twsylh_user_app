@@ -76,7 +76,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
     Get.find<CheckoutController>().resetOrderTax();
     Get.find<ParcelController>().getOfflineMethodList();
     Get.find<ParcelController>().getDmTipMostTapped();
-    Get.find<ParcelController>().setPaymentIndex(-1, false);
+    Get.find<ParcelController>().setPaymentIndex(0, false);
     Get.find<ParcelController>().getDistance(widget.pickedUpAddress, widget.destinationAddress);
     Get.find<CheckoutController>().getSurgePrice(
       zoneId: widget.pickedUpAddress.zoneId.toString(), moduleId: ModuleHelper.getModule()?.id.toString() ?? (ModuleHelper.getCacheModule()?.id.toString() ?? '0'),
@@ -417,70 +417,24 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                       child: Column(children: [
                         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                           Text('payment_method'.tr, style: robotoMedium),
-
-                          InkWell(
-                            onTap: (){
-                              bool isWalletActive = (Get.find<SplashController>().configModel!.customerWalletStatus == 1 && parcelController.payerIndex == 0 && !isGuestLoggedIn);
-                              bool isDigitalPaymentActive = (_isDigitalPaymentActive! && parcelController.payerIndex == 0);
-                              bool isOfflinePaymentActive = parcelController.offlineMethodList != null && parcelController.payerIndex == 0;
-                              if(_isCashOnDeliveryActive! || isDigitalPaymentActive || isWalletActive || isOfflinePaymentActive){
-                                if(ResponsiveHelper.isDesktop(context)) {
-                                  Get.dialog(
-                                      Dialog(backgroundColor: Colors.transparent, child: ParcelPaymentMethodBottomSheet(
-                                        isCashOnDeliveryActive: _isCashOnDeliveryActive!,
-                                        isDigitalPaymentActive: isDigitalPaymentActive,
-                                        totalPrice: total,
-                                        isOfflinePaymentActive: isOfflinePaymentActive,
-                                        canPayWallet: isWalletActive,
-                                      )));
-                                } else {
-                                  Get.bottomSheet(
-                                    ParcelPaymentMethodBottomSheet(
-                                      isCashOnDeliveryActive: _isCashOnDeliveryActive!,
-                                      isDigitalPaymentActive: isDigitalPaymentActive,
-                                      totalPrice: total,
-                                      isOfflinePaymentActive: isOfflinePaymentActive,
-                                      canPayWallet: isWalletActive,
-                                    ),
-                                    backgroundColor: Colors.transparent, isScrollControlled: true,
-                                  );
-                                }
-                              }else{
-                                showCustomSnackBar('no_payment_method_found'.tr);
-                              }
-                            },
-                            child: Image.asset(Images.paymentSelect, height: 24, width: 24),
-                          ),
                         ]),
 
                         const Divider(),
 
                         Row(children: [
-                          parcelController.paymentIndex != -1 ? Image.asset(
-                            parcelController.paymentIndex == 0 ? Images.cash
-                                : parcelController.paymentIndex == 1 ? Images.wallet
-                                : parcelController.paymentIndex == 2 ? Images.digitalPayment
-                                : Images.cash,
+                          Image.asset(
+                            Images.cash,
                             width: 20, height: 20,
                             color: Theme.of(context).textTheme.bodyMedium!.color,
-                          ) : Icon(
-                            Icons.wallet_outlined,
-                            size: 18, color: Theme.of(context).disabledColor,
                           ),
                           const SizedBox(width: Dimensions.paddingSizeSmall),
 
                           Expanded(
                             child: Text(
-                              parcelController.paymentIndex == 0 ? 'cash_on_delivery'.tr
-                                  : parcelController.paymentIndex == 1 ? 'wallet_payment'.tr
-                                  : parcelController.paymentIndex == 2 ? '${'digital_payment'.tr} (${parcelController.digitalPaymentName?.replaceAll('_', ' ').toTitleCase() ?? ''})'
-                                  : parcelController.paymentIndex == 3 ? '${'offline_payment'.tr}(${parcelController.offlineMethodList![parcelController.selectedOfflineBankIndex].methodName})'
-                                  : 'select_payment_method'.tr,
+                              'cash_on_delivery'.tr,
                               style: robotoMedium.copyWith(
                                 fontSize: Dimensions.fontSizeSmall,
-                                color: !ResponsiveHelper.isDesktop(context) ? Theme.of(context).disabledColor
-                                    : parcelController.paymentIndex == -1 ? Theme.of(context).primaryColor
-                                    : Theme.of(context).disabledColor,
+                                color: Theme.of(context).textTheme.bodyMedium!.color,
                               ),
                             ),
                           ),

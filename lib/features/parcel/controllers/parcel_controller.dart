@@ -13,6 +13,7 @@ import 'package:twsylh_user/features/auth/controllers/auth_controller.dart';
 import 'package:twsylh_user/features/checkout/domain/models/place_order_body_model.dart';
 import 'package:twsylh_user/features/parcel/domain/models/parcel_category_model.dart';
 import 'package:twsylh_user/features/parcel/domain/models/video_content_model.dart';
+import 'package:twsylh_user/helper/api_error_message_helper.dart';
 import 'package:twsylh_user/features/parcel/domain/models/why_choose_model.dart';
 import 'package:twsylh_user/features/parcel/domain/services/parcel_service_interface.dart';
 import 'package:twsylh_user/features/payment/domain/models/offline_method_model.dart';
@@ -399,9 +400,9 @@ class ParcelController extends GetxController implements GetxService {
       }
     } else {
       if(!isOfflinePay) {
-        parcelCallback(false, response.statusText, '-1', zoneID, amount, maximumCodOrderAmount, isCashOnDeliveryActive, placeOrderBody.contactPersonNumber);
+        parcelCallback(false, ApiErrorMessageHelper.orderPlacementMessage(response.statusText), '-1', zoneID, amount, maximumCodOrderAmount, isCashOnDeliveryActive, placeOrderBody.contactPersonNumber);
       } else {
-        showCustomSnackBar(response.statusText);
+        showCustomSnackBar(ApiErrorMessageHelper.orderPlacementMessage(response.statusText));
       }
     }
     update();

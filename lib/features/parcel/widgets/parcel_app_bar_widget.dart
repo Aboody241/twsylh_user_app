@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:twsylh_user/features/location/controllers/location_controller.dart';
 import 'package:twsylh_user/features/notification/controllers/notification_controller.dart';
 import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
+import 'package:twsylh_user/features/store/controllers/store_controller.dart';
 import 'package:twsylh_user/helper/address_helper.dart';
 import 'package:twsylh_user/helper/route_helper.dart';
 import 'package:twsylh_user/util/dimensions.dart';
@@ -23,15 +24,24 @@ class ParcelAppBarWidget extends StatelessWidget implements PreferredSizeWidget 
         width: .4,
         color: Theme.of(context).primaryColorLight.withValues(alpha: .2)),
       ),
-      elevation: 0, leadingWidth: backButton! ? Dimensions.paddingSizeLarge : 0,
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      leading: (backButton ?? true) ? IconButton(
+        icon: const Icon(Icons.arrow_back_ios),
+        color: Theme.of(context).textTheme.bodyLarge!.color,
+        onPressed: () {
+          final splashController = Get.find<SplashController>();
+          if (splashController.module != null && splashController.configModel!.module == null) {
+            splashController.removeModule();
+            Get.find<StoreController>().resetStoreData();
+          } else if (Navigator.canPop(context)) {
+            Get.back();
+          }
+        },
+      ) : null,
       title: GetBuilder<SplashController>(
         builder: (splashController) {
           return Row(children: [
-            (splashController.module != null && splashController.configModel!.module == null) ? InkWell(
-              onTap: () => splashController.removeModule(),
-              child: Image.asset(Images.moduleIcon, height: 25, width: 25, color: Theme.of(context).textTheme.bodyLarge!.color),
-            ) : const SizedBox(),
-            SizedBox(width: (splashController.module != null && splashController.configModel!.module == null) ? Dimensions.paddingSizeSmall : 0),
             Expanded(child: InkWell(
               onTap: () => Get.find<LocationController>().navigateToLocationScreen('home'),
               child: Padding(

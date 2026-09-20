@@ -23,6 +23,7 @@ import 'package:twsylh_user/features/store/domain/models/store_model.dart';
 import 'package:twsylh_user/features/order/controllers/order_controller.dart';
 import 'package:twsylh_user/features/payment/domain/models/offline_method_model.dart';
 import 'package:twsylh_user/features/checkout/domain/models/place_order_body_model.dart';
+import 'package:twsylh_user/helper/api_error_message_helper.dart';
 import 'package:twsylh_user/features/checkout/domain/models/timeslote_model.dart';
 import 'package:twsylh_user/features/checkout/domain/services/checkout_service_interface.dart';
 import 'package:twsylh_user/features/checkout/widgets/order_successfull_dialog.dart';
@@ -486,9 +487,9 @@ class CheckoutController extends GetxController implements GetxService {
     } else {
 
       if(!isOfflinePay) {
-        callback(false, response.statusText, '-1', zoneID, amount, maximumCodOrderAmount, fromCart, isCashOnDeliveryActive, placeOrderBody.contactPersonNumber, userID);
+        callback(false, ApiErrorMessageHelper.orderPlacementMessage(response.statusText), '-1', zoneID, amount, maximumCodOrderAmount, fromCart, isCashOnDeliveryActive, placeOrderBody.contactPersonNumber, userID);
       } else {
-        showCustomSnackBar(response.statusText);
+        showCustomSnackBar(ApiErrorMessageHelper.orderPlacementMessage(response.statusText));
       }
     }
     update();

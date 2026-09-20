@@ -38,7 +38,12 @@ class LocationService implements LocationServiceInterface{
   Future<Position> getPosition(LatLng? defaultLatLng, LatLng configLatLng) async {
     Position myPosition;
     try {
-      Position newLocalData = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+      Position newLocalData = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 3),
+        ),
+      );
       myPosition = newLocalData;
     }catch(e) {
       myPosition = Position(
