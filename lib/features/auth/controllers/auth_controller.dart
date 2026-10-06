@@ -1,5 +1,6 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -14,6 +15,7 @@ import 'package:twsylh_user/features/auth/domain/models/social_log_in_body.dart'
 import 'package:twsylh_user/features/auth/domain/models/signup_body_model.dart';
 import 'package:twsylh_user/features/auth/domain/services/auth_service_interface.dart';
 import 'package:twsylh_user/features/verification/screens/verification_screen.dart';
+import 'package:twsylh_user/helper/api_error_message_helper.dart';
 import 'package:twsylh_user/helper/responsive_helper.dart';
 import 'package:twsylh_user/helper/route_helper.dart';
 
@@ -64,20 +66,32 @@ class AuthController extends GetxController implements GetxService {
   Future<ResponseModel> login({required String emailOrPhone, required String password, required String loginType, required String fieldType, bool alreadyInApp = false}) async {
     _isLoading = true;
     update();
-    ResponseModel responseModel = await authServiceInterface.login(emailOrPhone: emailOrPhone, password: password, loginType: loginType, fieldType: fieldType, alreadyInApp: alreadyInApp);
-    _getUserAndCartData(responseModel);
-    _isLoading = false;
-    update();
+    ResponseModel responseModel;
+    try {
+      responseModel = await authServiceInterface.login(emailOrPhone: emailOrPhone, password: password, loginType: loginType, fieldType: fieldType, alreadyInApp: alreadyInApp);
+      _getUserAndCartData(responseModel);
+    } catch (e) {
+      responseModel = ResponseModel(false, e.toString());
+    } finally {
+      _isLoading = false;
+      update();
+    }
     return responseModel;
   }
 
   Future<ResponseModel> otpLogin({required String phone, required String loginType, required String otp, required String verified, bool alreadyInApp = false}) async {
     _isLoading = true;
     update();
-    ResponseModel responseModel = await authServiceInterface.otpLogin(phone: phone, otp: otp, loginType: loginType, verified: verified, alreadyInApp: alreadyInApp);
-    _getUserAndCartData(responseModel);
-    _isLoading = false;
-    update();
+    ResponseModel responseModel;
+    try {
+      responseModel = await authServiceInterface.otpLogin(phone: phone, otp: otp, loginType: loginType, verified: verified, alreadyInApp: alreadyInApp);
+      _getUserAndCartData(responseModel);
+    } catch (e) {
+      responseModel = ResponseModel(false, e.toString());
+    } finally {
+      _isLoading = false;
+      update();
+    }
     return responseModel;
   }
 
@@ -96,19 +110,31 @@ class AuthController extends GetxController implements GetxService {
   Future<ResponseModel> guestLogin() async {
     _guestLoading = true;
     update();
-    ResponseModel responseModel = await authServiceInterface.guestLogin();
-    _guestLoading = false;
-    update();
+    ResponseModel responseModel;
+    try {
+      responseModel = await authServiceInterface.guestLogin();
+    } catch (e) {
+      responseModel = ResponseModel(false, e.toString());
+    } finally {
+      _guestLoading = false;
+      update();
+    }
     return responseModel;
   }
 
   Future<ResponseModel> loginWithSocialMedia(SocialLogInBody socialLogInBody) async {
     _isLoading = true;
     update();
-    ResponseModel responseModel = await authServiceInterface.loginWithSocialMedia(socialLogInBody, isCustomerVerificationOn: Get.find<SplashController>().configModel!.customerVerification??false);
-    _getUserAndCartData(responseModel);
-    _isLoading = false;
-    update();
+    ResponseModel responseModel;
+    try {
+      responseModel = await authServiceInterface.loginWithSocialMedia(socialLogInBody, isCustomerVerificationOn: Get.find<SplashController>().configModel!.customerVerification??false);
+      _getUserAndCartData(responseModel);
+    } catch (e) {
+      responseModel = ResponseModel(false, e.toString());
+    } finally {
+      _isLoading = false;
+      update();
+    }
     return responseModel;
   }
 
@@ -286,60 +312,70 @@ class AuthController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: (PhoneAuthCredential credential) {},
-      verificationFailed: (FirebaseAuthException e) {
-        _isLoading = false;
-        update();
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) {
+          _isLoading = false;
+          update();
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          _isLoading = false;
+          update();
 
-        if(Get.isDialogOpen!) {
-          Get.back();
-        }
-
-        if(e.code == 'invalid-phone-number') {
-          showCustomSnackBar('please_submit_a_valid_phone_number'.tr);
-        }else{
-          showCustomSnackBar(e.message?.replaceAll('_', ' '));
-        }
-
-      },
-      codeSent: (String vId, int? resendToken) {
-
-        if(Get.isDialogOpen!) {
-          Get.back();
-        }
-
-        _isLoading = false;
-        update();
-        if(updateUserModel != null) {
-          updateUserModel.sessionInfo = vId;
-        }
-
-        if(canRoute) {
-          if(ResponsiveHelper.isDesktop(Get.context)) {
-
+          if(Get.isDialogOpen ?? false) {
             Get.back();
-            Get.dialog(VerificationScreen(
-              number: phoneNumber, email: null, token: token, fromSignUp: fromSignUp, fromForgetPassword: !fromSignUp,
-              loginType: loginType, password: '', firebaseSession: vId, userModel: updateUserModel,
-            ));
-          } else {
-            Get.toNamed(RouteHelper.getVerificationRoute(
-              phoneNumber, '', token, fromSignUp ? RouteHelper.signUp : RouteHelper.forgotPassword, '', loginType,
-              session: vId, updateUserModel: updateUserModel,
-            ));
           }
-        }
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        if(Get.isDialogOpen!) {
-          Get.back();
-        }
-        showCustomSnackBar('timed_out_please_try_again_after_few_minutes'.tr);
-      },
-    );
 
+          debugPrint('====> Firebase Phone Auth Error: [${e.code}] ${e.message}');
+          if(e.code == 'invalid-phone-number') {
+            showCustomSnackBar('please_submit_a_valid_phone_number'.tr);
+          } else {
+            showCustomSnackBar(ApiErrorMessageHelper.getLocalizedMessage(e.code) ?? 'an_unexpected_error_occurred'.tr);
+          }
+        },
+        codeSent: (String vId, int? resendToken) {
+          if(Get.isDialogOpen ?? false) {
+            Get.back();
+          }
+
+          _isLoading = false;
+          update();
+          if(updateUserModel != null) {
+            updateUserModel.sessionInfo = vId;
+          }
+
+          if(canRoute) {
+            if(ResponsiveHelper.isDesktop(Get.context)) {
+              Get.back();
+              Get.dialog(VerificationScreen(
+                number: phoneNumber, email: null, token: token, fromSignUp: fromSignUp, fromForgetPassword: !fromSignUp,
+                loginType: loginType, password: '', firebaseSession: vId, userModel: updateUserModel,
+              ));
+            } else {
+              Get.toNamed(RouteHelper.getVerificationRoute(
+                phoneNumber, '', token, fromSignUp ? RouteHelper.signUp : RouteHelper.forgotPassword, '', loginType,
+                session: vId, updateUserModel: updateUserModel,
+              ));
+            }
+          }
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _isLoading = false;
+          update();
+          if(Get.isDialogOpen ?? false) {
+            Get.back();
+          }
+          showCustomSnackBar('timed_out_please_try_again_after_few_minutes'.tr);
+        },
+      );
+    } catch (e) {
+      _isLoading = false;
+      update();
+      debugPrint('====> Auth catch error: $e');
+      showCustomSnackBar('an_unexpected_error_occurred'.tr);
+    }
   }
 
 }

@@ -62,7 +62,7 @@ class VerificationScreenState extends State<VerificationScreen> {
 
     Get.find<VerificationController>().updateVerificationCode('', canUpdate: false);
     if(widget.number != null && widget.number!.isNotEmpty) {
-      _number = widget.number!.startsWith('+') ? widget.number : '+${widget.number!.substring(1, widget.number!.length)}';
+      _number = widget.number!.startsWith('+') ? widget.number : '+${widget.number}';
     }
     _email = widget.email;
     _startTimer();
@@ -132,7 +132,7 @@ class VerificationScreenState extends State<VerificationScreen> {
                 child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
                   RichText(text: TextSpan(children: [
                     TextSpan(text: 'we_have_a_verification_code'.tr, style: robotoRegular.copyWith(color: Theme.of(context).hintColor)),
-                    TextSpan(text: ' ${(_email != null && _email!.isNotEmpty) ? _email : _number}', style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color)),
+                    TextSpan(text: ' ${(_email != null && _email!.isNotEmpty) ? _email : '\u200E$_number'}', style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color)),
                   ]), textAlign: TextAlign.center,),
                 ],
                 ),
@@ -141,37 +141,40 @@ class VerificationScreenState extends State<VerificationScreen> {
 
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: context.width > 850 ? 50 : Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeDefault),
-                child: PinCodeTextField(
-                  length: 6,
-                  appContext: context,
-                  keyboardType: TextInputType.number,
-                  animationType: AnimationType.slide,
-                  pinTheme: PinTheme(
-                    shape: PinCodeFieldShape.box,
-                    fieldHeight: 60,
-                    fieldWidth: 50,
-                    borderWidth: borderWidth,
-                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                    selectedColor: Theme.of(context).primaryColor,
-                    selectedFillColor: Colors.white,
-                    inactiveFillColor: Theme.of(context).cardColor,
-                    inactiveColor: Theme.of(context).disabledColor.withValues(alpha: 0.6),
-                    activeColor: hasError ? Colors.orange : Theme.of(context).disabledColor,
-                    activeFillColor: Theme.of(context).cardColor,
-                    inactiveBorderWidth: borderWidth,
-                    selectedBorderWidth: borderWidth,
-                    disabledBorderWidth: borderWidth,
-                    errorBorderWidth: borderWidth,
-                    activeBorderWidth: borderWidth,
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: PinCodeTextField(
+                    length: 6,
+                    appContext: context,
+                    keyboardType: TextInputType.number,
+                    animationType: AnimationType.slide,
+                    pinTheme: PinTheme(
+                      shape: PinCodeFieldShape.box,
+                      fieldHeight: 60,
+                      fieldWidth: 50,
+                      borderWidth: borderWidth,
+                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                      selectedColor: Theme.of(context).primaryColor,
+                      selectedFillColor: Colors.white,
+                      inactiveFillColor: Theme.of(context).cardColor,
+                      inactiveColor: Theme.of(context).disabledColor.withValues(alpha: 0.6),
+                      activeColor: hasError ? Colors.orange : Theme.of(context).disabledColor,
+                      activeFillColor: Theme.of(context).cardColor,
+                      inactiveBorderWidth: borderWidth,
+                      selectedBorderWidth: borderWidth,
+                      disabledBorderWidth: borderWidth,
+                      errorBorderWidth: borderWidth,
+                      activeBorderWidth: borderWidth,
+                    ),
+                    animationDuration: const Duration(milliseconds: 300),
+                    backgroundColor: Colors.transparent,
+                    enableActiveFill: true,
+                    onChanged: verificationController.updateVerificationCode,
+                    beforeTextPaste: (text) => true,
+                    errorAnimationController: errorController, // Optional: Custom error animation
+                    errorTextSpace: 20, // Space for error text
+                    errorTextMargin: const EdgeInsets.only(top: 10),
                   ),
-                  animationDuration: const Duration(milliseconds: 300),
-                  backgroundColor: Colors.transparent,
-                  enableActiveFill: true,
-                  onChanged: verificationController.updateVerificationCode,
-                  beforeTextPaste: (text) => true,
-                  errorAnimationController: errorController, // Optional: Custom error animation
-                  errorTextSpace: 20, // Space for error text
-                  errorTextMargin: const EdgeInsets.only(top: 10),
                 ),
               ),
               // const SizedBox(height: Dimensions.paddingSizeSmall),

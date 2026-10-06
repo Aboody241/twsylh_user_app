@@ -277,31 +277,34 @@ class SocialLoginWidget extends StatelessWidget {
     }else{
       try{
         if(googleSignIn.supportsAuthenticate()) {
-          await googleSignIn.initialize(serverClientId: AppConstants.googleServerClientId).then((_) async {
+          await googleSignIn.initialize(serverClientId: AppConstants.googleServerClientId);
 
-            googleSignIn.signOut();
-            GoogleSignInAccount googleAccount = await googleSignIn.authenticate();
-            const List<String> scopes = <String>['email'];
-            GoogleSignInClientAuthorization? auth = await googleAccount.authorizationClient.authorizationForScopes(scopes);
+          await googleSignIn.signOut();
+          GoogleSignInAccount googleAccount = await googleSignIn.authenticate();
+          const List<String> scopes = <String>['email'];
+          GoogleSignInClientAuthorization? auth = await googleAccount.authorizationClient.authorizationForScopes(scopes);
 
-            SocialLogInBody googleBodyModel = SocialLogInBody(
-              email: googleAccount.email, token: auth?.accessToken, uniqueId: googleAccount.id,
-              medium: 'google', accessToken: 1, loginType: CentralizeLoginType.social.name,
-            );
+          SocialLogInBody googleBodyModel = SocialLogInBody(
+            email: googleAccount.email, token: auth?.accessToken, uniqueId: googleAccount.id,
+            medium: 'google', accessToken: 1, loginType: CentralizeLoginType.social.name,
+          );
 
-            Get.find<AuthController>().loginWithSocialMedia(googleBodyModel).then((response) {
-              if (response.isSuccess) {
-                _processSocialSuccessSetup(response, googleBodyModel, null, null);
-              } else {
-                showCustomSnackBar(response.message);
-              }
-            });
-          });
+          ResponseModel response = await Get.find<AuthController>().loginWithSocialMedia(googleBodyModel);
+          if (response.isSuccess) {
+            _processSocialSuccessSetup(response, googleBodyModel, null, null);
+          } else {
+            showCustomSnackBar(response.message);
+          }
         }else {
           debugPrint("Google Sign-In not supported on this device.");
+          showCustomSnackBar('google_sign_in_not_supported'.tr);
         }
       }catch(e){
         debugPrint('Error in google sign in: $e');
+        String err = e.toString().toLowerCase();
+        if(!err.contains('canceled') && !err.contains('cancelled')) {
+          showCustomSnackBar('an_unexpected_error_occurred'.tr);
+        }
       }
     }
   }
@@ -331,7 +334,8 @@ class SocialLoginWidget extends StatelessWidget {
       });
 
     } catch (e) {
-      showCustomSnackBar(e.toString());
+      debugPrint('Error in google web sign in: $e');
+      showCustomSnackBar('an_unexpected_error_occurred'.tr);
     }
   }
 

@@ -74,12 +74,34 @@ class ValidateCheck{
     String phone = "";
 
     try{
-      PhoneNumber phoneNumber = PhoneNumber.parse(number);
-      isValid = phoneNumber.isValid(type: PhoneNumberType.mobile);
-      if(isValid){
-        phone = withCountryCode ? "+${phoneNumber.countryCode}${phoneNumber.nsn}" : phoneNumber.nsn.toString();
-        if (kDebugMode) {
-          print("Phone Number : $phone");
+      String cleanNumber = number.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+      if (cleanNumber.isNotEmpty) {
+        if (cleanNumber.startsWith('00')) {
+          cleanNumber = '+${cleanNumber.substring(2)}';
+        } else if (!cleanNumber.startsWith('+')) {
+          cleanNumber = '+$cleanNumber';
+        }
+
+        PhoneNumber phoneNumber = PhoneNumber.parse(cleanNumber);
+        isValid = phoneNumber.isValid(type: PhoneNumberType.mobile);
+        if (!isValid && phoneNumber.nsn.startsWith('0')) {
+          try {
+            String retryNumber = '+${phoneNumber.countryCode}${phoneNumber.nsn.replaceFirst(RegExp(r'^0+'), '')}';
+            PhoneNumber retryPhone = PhoneNumber.parse(retryNumber);
+            if (retryPhone.isValid(type: PhoneNumberType.mobile) || retryPhone.isValid()) {
+              phoneNumber = retryPhone;
+              isValid = true;
+            }
+          } catch (_) {}
+        }
+        if (!isValid) {
+          isValid = phoneNumber.isValid();
+        }
+        if(isValid){
+          phone = withCountryCode ? "+${phoneNumber.countryCode}${phoneNumber.nsn}" : phoneNumber.nsn.toString();
+          if (kDebugMode) {
+            print("Phone Number : $phone");
+          }
         }
       }
     }catch(e) {

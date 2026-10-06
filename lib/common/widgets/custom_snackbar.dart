@@ -1,9 +1,11 @@
 import 'package:twsylh_user/common/widgets/coustom_toast.dart';
+import 'package:twsylh_user/helper/api_error_message_helper.dart';
 import 'package:twsylh_user/util/dimensions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 void showCustomSnackBar(String? message, {bool isError = true, bool getXSnackBar = false, int? showDuration, double? bottomMargin}) {
+  message = ApiErrorMessageHelper.getLocalizedMessage(message);
   if(message != null && message.isNotEmpty) {
     if(getXSnackBar) {
       Get.showSnackbar(GetSnackBar(

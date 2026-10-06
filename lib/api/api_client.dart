@@ -20,7 +20,7 @@ import 'package:flutter/foundation.dart';
 class ApiClient extends GetxService {
   final String appBaseUrl;
   final SharedPreferences sharedPreferences;
-  static final String noInternetMessage = 'connection_to_api_server_failed'.tr;
+  static String get noInternetMessage => 'connection_to_api_server_failed'.tr;
   final int timeoutInSeconds = 40;
 
   String? token;

@@ -157,7 +157,10 @@ class AuthRepository implements AuthRepositoryInterface{
       }
       if(!GetPlatform.isWeb) {
         FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
-        FirebaseMessaging.instance.subscribeToTopic('zone_${AddressHelper.getUserAddressFromSharedPref()!.zoneId}_customer');
+        final userAddress = AddressHelper.getUserAddressFromSharedPref();
+        if(userAddress != null && userAddress.zoneId != null) {
+          FirebaseMessaging.instance.subscribeToTopic('zone_${userAddress.zoneId}_customer');
+        }
       }
     }
     return await apiClient.postData(AppConstants.tokenUri, {"_method": "put", "cm_firebase_token": notificationDeviceToken.isNotEmpty ? notificationDeviceToken : deviceToken}, handleError: false);
@@ -214,7 +217,10 @@ class AuthRepository implements AuthRepositoryInterface{
   Future<bool> clearSharedData({bool removeToken = true}) async {
     if(!GetPlatform.isWeb) {
       FirebaseMessaging.instance.unsubscribeFromTopic(AppConstants.topic);
-      FirebaseMessaging.instance.unsubscribeFromTopic('zone_${AddressHelper.getUserAddressFromSharedPref()!.zoneId}_customer');
+      final userAddress = AddressHelper.getUserAddressFromSharedPref();
+      if(userAddress != null && userAddress.zoneId != null) {
+        FirebaseMessaging.instance.unsubscribeFromTopic('zone_${userAddress.zoneId}_customer');
+      }
       if(removeToken){
         apiClient.postData(AppConstants.tokenUri, {"_method": "put", "cm_firebase_token": '@'}, handleError: false);
       }
@@ -338,7 +344,10 @@ class AuthRepository implements AuthRepositoryInterface{
         await updateToken(notificationDeviceToken: '@');
         FirebaseMessaging.instance.unsubscribeFromTopic(AppConstants.topic);
         if(isLoggedIn()) {
-          FirebaseMessaging.instance.unsubscribeFromTopic('zone_${AddressHelper.getUserAddressFromSharedPref()!.zoneId}_customer');
+          final userAddress = AddressHelper.getUserAddressFromSharedPref();
+          if(userAddress != null && userAddress.zoneId != null) {
+            FirebaseMessaging.instance.unsubscribeFromTopic('zone_${userAddress.zoneId}_customer');
+          }
         }
       }
     }

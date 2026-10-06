@@ -226,9 +226,30 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
     String phone = _numberController.text.trim();
     String email = _emailController.text.trim();
 
-    String numberWithCountryCode = countryCode+phone;
+    String cleanPhone = phone.replaceAll(RegExp(r'[\s\-()]'), '');
+    String numberWithCountryCode;
+
+    if (cleanPhone.startsWith('+')) {
+      numberWithCountryCode = cleanPhone;
+    } else if (cleanPhone.startsWith('00')) {
+      numberWithCountryCode = '+${cleanPhone.substring(2)}';
+    } else {
+      String dialCode = countryCode.trim();
+      String dialCodeDigits = dialCode.replaceAll('+', '');
+      if (dialCodeDigits.isNotEmpty && cleanPhone.startsWith(dialCodeDigits)) {
+        numberWithCountryCode = '+$cleanPhone';
+      } else {
+        if (cleanPhone.startsWith('0')) {
+          cleanPhone = cleanPhone.replaceFirst(RegExp(r'^0+'), '');
+        }
+        numberWithCountryCode = '$dialCode$cleanPhone';
+      }
+    }
+
     PhoneValid phoneValid = await CustomValidator.isPhoneValid(numberWithCountryCode);
-    numberWithCountryCode = phoneValid.phone;
+    if (phoneValid.isValid && phoneValid.phone.isNotEmpty) {
+      numberWithCountryCode = phoneValid.phone;
+    }
 
     if(_formKeyLogin!.currentState!.validate()) {
       if (!phoneValid.isValid && !isEmail) {
@@ -236,7 +257,10 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
       } else {
         Get.find<VerificationController>().forgetPassword(email: email, phone: numberWithCountryCode).then((status) async {
           if (status.isSuccess) {
-            if(Get.find<SplashController>().configModel!.centralizeLoginSetup!.phoneVerificationStatus! && Get.find<SplashController>().configModel!.firebaseOtpVerification!) {
+            bool isPhoneVerification = (Get.find<SplashController>().configModel?.centralizeLoginSetup?.phoneVerificationStatus ?? true);
+            bool isFirebaseOtp = (Get.find<SplashController>().configModel?.firebaseOtpVerification ?? false);
+
+            if(isPhoneVerification && isFirebaseOtp) {
               Get.find<AuthController>().firebaseVerifyPhoneNumber(numberWithCountryCode, status.message, '', fromSignUp: false);
             } else {
               if(ResponsiveHelper.isDesktop(Get.context)) {

@@ -27,8 +27,8 @@ class _ImageFileViewWidgetState extends State<ImageFileViewWidget> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         Get.snackbar(
-          'Error',
-          'Could not open PDF file',
+          'error'.tr,
+          'could_not_open_pdf_file'.tr,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
@@ -49,8 +49,8 @@ class _ImageFileViewWidgetState extends State<ImageFileViewWidget> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         Get.snackbar(
-          'Error',
-          'Could not open file',
+          'error'.tr,
+          'could_not_open_file'.tr,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
