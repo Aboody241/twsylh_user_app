@@ -2284,6 +2284,7 @@
   "firebase_auth_session_expired": "The verification code has expired. Please request a new code.",
   "firebase_auth_user_disabled": "This account has been disabled.",
   "firebase_auth_operation_not_allowed": "This operation is currently not allowed.",
+  "firebase_auth_app_not_authorized": "App verification failed (Play Integrity/SHA). Please check Firebase settings.",
   "an_unexpected_error_occurred": "An unexpected error occurred. Please try again.",
   "something_went_wrong": "Something went wrong. Please try again.",
   "order_already_accepted_by_another_deliveryman": "Sorry, this order has already been accepted by another delivery person!",

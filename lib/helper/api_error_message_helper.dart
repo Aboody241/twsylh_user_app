@@ -112,6 +112,10 @@ class ApiErrorMessageHelper {
       return 'firebase_auth_operation_not_allowed'.tr;
     }
 
+    if (lower.contains('app-not-authorized')) {
+      return 'firebase_auth_app_not_authorized'.tr;
+    }
+
     if (lower.contains('invalid-phone-number')) {
       return 'please_submit_a_valid_phone_number'.tr;
     }

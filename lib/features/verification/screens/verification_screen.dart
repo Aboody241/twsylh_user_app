@@ -61,10 +61,11 @@ class VerificationScreenState extends State<VerificationScreen> {
     super.initState();
 
     Get.find<VerificationController>().updateVerificationCode('', canUpdate: false);
-    if(widget.number != null && widget.number!.isNotEmpty) {
-      _number = widget.number!.startsWith('+') ? widget.number : '+${widget.number}';
+    if(widget.number != null && widget.number != 'null' && widget.number!.trim().isNotEmpty) {
+      String clean = widget.number!.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+      _number = clean.startsWith('+') ? clean : '+$clean';
     }
-    _email = widget.email;
+    _email = widget.email != 'null' ? widget.email : null;
     _startTimer();
 
     errorController = StreamController<ErrorAnimationType>();

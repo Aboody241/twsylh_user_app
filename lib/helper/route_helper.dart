@@ -216,7 +216,9 @@ class RouteHelper {
       List<int> encoded = utf8.encode(jsonEncode(updateUserModel.toJson()));
       userModel = base64Encode(encoded);
     }
-    return '$verification?page=$page&number=$number&email=$email&token=$token&pass=$pass&login_type=$loginType&session=$authSession&user_model=$userModel&back_from_this=${backFromThis.toString()}';
+    String encodedNumber = Uri.encodeComponent(number ?? '');
+    String encodedEmail = Uri.encodeComponent(email ?? '');
+    return '$verification?page=$page&number=$encodedNumber&email=$encodedEmail&token=$token&pass=$pass&login_type=$loginType&session=$authSession&user_model=$userModel&back_from_this=${backFromThis.toString()}';
   }
 
   static String getAccessLocationRoute(String page) => '$accessLocation?page=$page';
@@ -224,7 +226,8 @@ class RouteHelper {
   static String getInterestRoute() => interest;
   static String getMainRoute(String page) => '$main?page=$page';
   static String getForgotPassRoute() => forgotPassword;
-  static String getResetPasswordRoute({String? phone, String? email, required String token, required String page}) => '$resetPassword?phone=$phone&token=$token&page=$page&email=$email';
+  static String getResetPasswordRoute({String? phone, String? email, required String token, required String page}) =>
+      '$resetPassword?phone=${Uri.encodeComponent(phone ?? '')}&token=${Uri.encodeComponent(token)}&page=$page&email=${Uri.encodeComponent(email ?? '')}';
   static String getSearchRoute({String? queryText}) => '$search?query=${queryText ?? ''}&module=${ModuleHelper.getModule()?.slug ?? ModuleHelper.getModule()?.id}';
 
   static String getStoreRoute({required int? id, required String page, required String slug, String? moduleId, bool fromDeeplink = false}) {

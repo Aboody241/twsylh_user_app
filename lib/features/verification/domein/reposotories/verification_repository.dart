@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twsylh_user/common/models/response_model.dart';
@@ -17,9 +18,25 @@ class VerificationRepository implements VerificationRepositoryInterface{
 
   @override
   Future<ResponseModel> forgetPassword({String? phone, String? email}) async {
-    String? deviceToken = await Get.find<AuthController>().saveDeviceToken();
-    Response response = await apiClient.postData(AppConstants.forgetPasswordUri,
-      {"phone": phone, "email": email, "verification_method" : phone != null && phone.isNotEmpty ? 'phone' : 'email', "cm_firebase_token": deviceToken!}, handleError: false);
+    String? deviceToken;
+    try {
+      deviceToken = await Get.find<AuthController>().saveDeviceToken();
+    } catch (e) {
+      debugPrint('Error getting device token in forgetPassword: $e');
+    }
+    deviceToken ??= '';
+
+    bool isPhoneMethod = phone != null && phone.trim().isNotEmpty && phone.trim() != '+20' && phone.trim() != '+';
+    Response response = await apiClient.postData(
+      AppConstants.forgetPasswordUri,
+      {
+        "phone": isPhoneMethod ? phone.trim() : null,
+        "email": !isPhoneMethod ? email?.trim() : null,
+        "verification_method": isPhoneMethod ? 'phone' : 'email',
+        "cm_firebase_token": deviceToken,
+      },
+      handleError: false,
+    );
     if (response.statusCode == 200) {
       return ResponseModel(true, response.body["message"]);
     } else {
@@ -29,9 +46,18 @@ class VerificationRepository implements VerificationRepositoryInterface{
 
   @override
   Future<ResponseModel> resetPassword({String? resetToken, String? phone, String? email, required String password, required String confirmPassword}) async {
+    bool hasPhone = phone != null && phone != 'null' && phone.trim().isNotEmpty;
     Response response = await apiClient.postData(
       AppConstants.resetPasswordUri,
-      {"_method": "put", "reset_token": resetToken, "phone": phone != null && phone != 'null' && phone.isNotEmpty ? phone : '', "email" : email != null && email != 'null' && email.isNotEmpty ? email : '', "verification_method" : phone != null && phone != 'null' && phone.isNotEmpty ? 'phone' : 'email', "password": password, "confirm_password": confirmPassword},
+      {
+        "_method": "put",
+        "reset_token": resetToken,
+        "phone": hasPhone ? phone.trim() : '',
+        "email": !hasPhone && email != null && email != 'null' ? email.trim() : '',
+        "verification_method": hasPhone ? 'phone' : 'email',
+        "password": password,
+        "confirm_password": confirmPassword,
+      },
       handleError: false,
     );
     if (response.statusCode == 200) {

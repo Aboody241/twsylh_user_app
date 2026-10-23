@@ -1,3 +1,5 @@
+import 'package:country_code_picker/country_code_picker.dart';
+import 'package:twsylh_user/features/splash/controllers/splash_controller.dart';
 import 'package:twsylh_user/features/auth/widgets/auth_dialog_widget.dart';
 import 'package:twsylh_user/features/profile/controllers/profile_controller.dart';
 import 'package:twsylh_user/features/profile/domain/models/userinfo_model.dart';
@@ -155,8 +157,23 @@ class _NewPassScreenState extends State<NewPassScreen> {
 
   void _resetUserPassword(String password, String confirmPassword) {
     String? number = '';
-    if(widget.number != null && widget.number != 'null' && widget.number!.isNotEmpty) {
-      number = widget.number!.startsWith('+') ? widget.number : '+${widget.number!.substring(1, widget.number!.length)}';
+    if(widget.number != null && widget.number != 'null' && widget.number!.trim().isNotEmpty) {
+      String cleanPhone = widget.number!.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+      if (cleanPhone.startsWith('+')) {
+        number = cleanPhone;
+      } else if (cleanPhone.startsWith('00')) {
+        number = '+${cleanPhone.substring(2)}';
+      } else if (cleanPhone.startsWith('20')) {
+        number = '+$cleanPhone';
+      } else {
+        String dialCode = Get.find<SplashController>().configModel?.country != null
+            ? (CountryCode.fromCountryCode(Get.find<SplashController>().configModel!.country!).dialCode ?? '+20')
+            : '+20';
+        if (cleanPhone.startsWith('0')) {
+          cleanPhone = cleanPhone.replaceFirst(RegExp(r'^0+'), '');
+        }
+        number = '$dialCode$cleanPhone';
+      }
     }
     Get.find<VerificationController>().resetPassword(resetToken: widget.resetToken, phone: number, email: widget.email, password: password, confirmPassword: confirmPassword).then((value) {
       if (value.isSuccess) {

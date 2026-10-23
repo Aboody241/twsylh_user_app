@@ -255,22 +255,31 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
       if (!phoneValid.isValid && !isEmail) {
         showCustomSnackBar('invalid_phone_number'.tr);
       } else {
-        Get.find<VerificationController>().forgetPassword(email: email, phone: numberWithCountryCode).then((status) async {
+        Get.find<VerificationController>().forgetPassword(
+          email: isEmail ? email : '',
+          phone: isEmail ? '' : numberWithCountryCode,
+        ).then((status) async {
           if (status.isSuccess) {
             bool isPhoneVerification = (Get.find<SplashController>().configModel?.centralizeLoginSetup?.phoneVerificationStatus ?? true);
             bool isFirebaseOtp = (Get.find<SplashController>().configModel?.firebaseOtpVerification ?? false);
 
-            if(isPhoneVerification && isFirebaseOtp) {
+            if(!isEmail && isPhoneVerification && isFirebaseOtp) {
               Get.find<AuthController>().firebaseVerifyPhoneNumber(numberWithCountryCode, status.message, '', fromSignUp: false);
             } else {
               if(ResponsiveHelper.isDesktop(Get.context)) {
                 Get.back();
                 Get.dialog(VerificationScreen(
-                  number: numberWithCountryCode, email: email, token: '', fromSignUp: false,
+                  number: isEmail ? null : numberWithCountryCode,
+                  email: isEmail ? email : null,
+                  token: '', fromSignUp: false,
                   fromForgetPassword: true, loginType: '', password: '',
                 ));
               } else {
-                Get.toNamed(RouteHelper.getVerificationRoute(numberWithCountryCode, email, '', RouteHelper.forgotPassword, '', ''));
+                Get.toNamed(RouteHelper.getVerificationRoute(
+                  isEmail ? '' : numberWithCountryCode,
+                  isEmail ? email : '',
+                  '', RouteHelper.forgotPassword, '', '',
+                ));
               }
             }
           }else {

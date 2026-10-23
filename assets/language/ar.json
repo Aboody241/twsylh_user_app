@@ -2284,6 +2284,7 @@
   "firebase_auth_session_expired": "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.",
   "firebase_auth_user_disabled": "تم تعطيل هذا الحساب.",
   "firebase_auth_operation_not_allowed": "هذه العملية غير مسموح بها حاليًا.",
+  "firebase_auth_app_not_authorized": "تعذر التحقق من التطبيق (Play Integrity/SHA). يرجى مراجعة إعدادات Firebase.",
   "an_unexpected_error_occurred": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
   "something_went_wrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
   "order_already_accepted_by_another_deliveryman": "عذراً، تم قبول هذا الطلب بالفعل بواسطة مندوب آخر!",
