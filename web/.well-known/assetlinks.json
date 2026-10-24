@@ -1,9 +1,14 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.sixamtech.sixam_mart_user",
-    "sha256_cert_fingerprints":
-    ["4E:A9:87:31:71:3F:0D:FA:B5:9F:82:6C:BD:42:82:F5:4B:60:6B:E7:DA:DB:4A:67:F8:98:A2:0E:EF:2E:03:5B"]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.twsylh.user",
+      "sha256_cert_fingerprints": [
+        "AF:F3:F1:1D:92:89:C6:65:D2:96:A2:8A:80:28:5E:6B:E0:A5:F1:DB:5C:7A:73:DE:EE:23:A5:82:70:AC:0F:22",
+        "43:6E:CE:0C:69:65:D1:E1:BB:E3:74:8C:60:B4:8F:00:36:FF:5F:78:7E:06:FF:EF:BA:08:A8:20:8A:8F:9A:60",
+        "10:12:60:26:79:3B:3F:3B:61:3D:32:4D:F4:2B:A1:BC:5B:67:9C:29:00:07:31:41:06:55:DC:6E:47:57:C3:5B"
+      ]
+    }
   }
-}]
+]

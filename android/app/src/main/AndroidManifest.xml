@@ -88,8 +88,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="6ammart-web.6amtech.com" />
-                <data android:scheme="https" />
+                <data android:scheme="http" android:host="twsylh.com" />
+                <data android:scheme="https" android:host="twsylh.com" />
+                <data android:scheme="http" android:host="www.twsylh.com" />
+                <data android:scheme="https" android:host="www.twsylh.com" />
             </intent-filter>
 
         </activity>
