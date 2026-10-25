@@ -283,9 +283,11 @@ class SocialLoginWidget extends StatelessWidget {
           GoogleSignInAccount googleAccount = await googleSignIn.authenticate();
           const List<String> scopes = <String>['email'];
           GoogleSignInClientAuthorization? auth = await googleAccount.authorizationClient.authorizationForScopes(scopes);
+          final GoogleSignInAuthentication googleAuthentication = googleAccount.authentication;
+          final String? googleToken = auth?.accessToken ?? googleAuthentication.idToken;
 
           SocialLogInBody googleBodyModel = SocialLogInBody(
-            email: googleAccount.email, token: auth?.accessToken, uniqueId: googleAccount.id,
+            email: googleAccount.email, token: googleToken, uniqueId: googleAccount.id,
             medium: 'google', accessToken: 1, loginType: CentralizeLoginType.social.name,
           );
 
@@ -303,7 +305,7 @@ class SocialLoginWidget extends StatelessWidget {
         debugPrint('Error in google sign in: $e');
         String err = e.toString().toLowerCase();
         if(!err.contains('canceled') && !err.contains('cancelled')) {
-          showCustomSnackBar('an_unexpected_error_occurred'.tr);
+          showCustomSnackBar('Google sign-in failed. Please try again.');
         }
       }
     }

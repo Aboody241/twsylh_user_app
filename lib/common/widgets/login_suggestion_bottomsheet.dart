@@ -214,9 +214,11 @@ class LoginSuggestionBottomSheet extends StatelessWidget {
           GoogleSignInAccount googleAccount = await googleSignIn.authenticate();
           const List<String> scopes = <String>['email'];
           GoogleSignInClientAuthorization? auth = await googleAccount.authorizationClient.authorizationForScopes(scopes);
+          final GoogleSignInAuthentication googleAuthentication = googleAccount.authentication;
+          final String? googleToken = auth?.accessToken ?? googleAuthentication.idToken;
 
           SocialLogInBody googleBodyModel = SocialLogInBody(
-            email: googleAccount.email, token: auth?.accessToken, uniqueId: googleAccount.id,
+            email: googleAccount.email, token: googleToken, uniqueId: googleAccount.id,
             medium: 'google', accessToken: 1, loginType: CentralizeLoginType.social.name,
           );
 
