@@ -28,12 +28,16 @@ import 'package:twsylh_user/util/app_constants.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twsylh_user/features/dashboard/screens/dashboard_screen.dart';
 import 'package:twsylh_user/features/notification/widgets/notifiation_popup_dialog_widget.dart';
 
 import '../features/ride_share_module/ride_location/screens/map_screen.dart';
 
 class NotificationHelper {
+
+  static const String _notifiedOrderIdsKey = 'orders_notified_with_sound';
+  static Future<void> _orderSoundGuard = Future<void>.value();
 
   static Future<void> initialize(FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
     var androidInitialize = const AndroidInitializationSettings('notification_icon');
@@ -318,6 +322,7 @@ class NotificationHelper {
       String? orderID;
       String? image;
       NotificationBodyModel notificationBody = convertNotification(message.data);
+      final bool playSound = await _shouldPlayOrderSound(message);
 
       title = message.data['title'];
       body = message.data['body'];
@@ -327,40 +332,69 @@ class NotificationHelper {
 
       if(image != null && image.isNotEmpty) {
         try{
-          await showBigPictureNotificationHiddenLargeIcon(title, body, orderID, notificationBody, image, fln);
+          await showBigPictureNotificationHiddenLargeIcon(title, body, orderID, notificationBody, image, fln, playSound: playSound);
         }catch(e) {
-          await showBigTextNotification(title, body!, orderID, notificationBody, fln);
+          await showBigTextNotification(title, body!, orderID, notificationBody, fln, playSound: playSound);
         }
       }else {
-        await showBigTextNotification(title, body!, orderID, notificationBody, fln);
+        await showBigTextNotification(title, body!, orderID, notificationBody, fln, playSound: playSound);
       }
     }
   }
 
-  static Future<void> showTextNotification(String title, String body, String orderID, NotificationBodyModel? notificationBody, FlutterLocalNotificationsPlugin fln) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Twsylh', AppConstants.appName, playSound: true,
-      importance: Importance.max, priority: Priority.max, sound: RawResourceAndroidNotificationSound('notification'),
+  static Future<bool> _shouldPlayOrderSound(RemoteMessage message) {
+    final String? orderId = message.data['order_id']?.toString();
+    if (message.data['type'] != 'order_status' || orderId == null || orderId.isEmpty) {
+      return Future<bool>.value(true);
+    }
+
+    final Future<bool> result = _orderSoundGuard.then((_) async {
+      try {
+        final SharedPreferences preferences = Get.find<SharedPreferences>();
+        final List<String> notifiedOrderIds = preferences.getStringList(_notifiedOrderIdsKey) ?? <String>[];
+        if (notifiedOrderIds.contains(orderId)) {
+          return false;
+        }
+
+        notifiedOrderIds.add(orderId);
+        final List<String> recentOrderIds = notifiedOrderIds.length > 500
+            ? notifiedOrderIds.sublist(notifiedOrderIds.length - 500)
+            : notifiedOrderIds;
+        await preferences.setStringList(_notifiedOrderIdsKey, recentOrderIds);
+        return true;
+      } catch (_) {
+        return true;
+      }
+    });
+    _orderSoundGuard = result.then((_) {});
+    return result;
+  }
+
+  static Future<void> showTextNotification(String title, String body, String orderID, NotificationBodyModel? notificationBody, FlutterLocalNotificationsPlugin fln, {bool playSound = true}) async {
+    final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'Twsylh', AppConstants.appName, playSound: playSound,
+      importance: Importance.max, priority: Priority.max,
+      sound: playSound ? const RawResourceAndroidNotificationSound('notification') : null,
     );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    final NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
     await fln.show(0, title, body, platformChannelSpecifics, payload: notificationBody != null ? jsonEncode(notificationBody.toJson()) : null);
   }
 
-  static Future<void> showBigTextNotification(String? title, String body, String? orderID, NotificationBodyModel? notificationBody, FlutterLocalNotificationsPlugin fln) async {
+  static Future<void> showBigTextNotification(String? title, String body, String? orderID, NotificationBodyModel? notificationBody, FlutterLocalNotificationsPlugin fln, {bool playSound = true}) async {
     BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
       body, htmlFormatBigText: true,
       contentTitle: title, htmlFormatContentTitle: true,
     );
     AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Twsylh', AppConstants.appName, importance: Importance.max,
-      styleInformation: bigTextStyleInformation, priority: Priority.max, playSound: true,
-      sound: const RawResourceAndroidNotificationSound('notification'),
+      styleInformation: bigTextStyleInformation, priority: Priority.max, playSound: playSound,
+      sound: playSound ? const RawResourceAndroidNotificationSound('notification') : null,
     );
     NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
     await fln.show(0, title, body, platformChannelSpecifics, payload: notificationBody != null ? jsonEncode(notificationBody.toJson()) : null);
   }
 
-  static Future<void> showBigPictureNotificationHiddenLargeIcon(String? title, String? body, String? orderID, NotificationBodyModel? notificationBody, String image, FlutterLocalNotificationsPlugin fln) async {
+  static Future<void> showBigPictureNotificationHiddenLargeIcon(String? title, String? body, String? orderID, NotificationBodyModel? notificationBody, String image, FlutterLocalNotificationsPlugin fln, {bool playSound = true}) async {
     final String largeIconPath = await _downloadAndSaveFile(image, 'largeIcon');
     final String bigPicturePath = await _downloadAndSaveFile(image, 'bigPicture');
     final BigPictureStyleInformation bigPictureStyleInformation = BigPictureStyleInformation(
@@ -370,9 +404,9 @@ class NotificationHelper {
     );
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Twsylh', AppConstants.appName,
-      largeIcon: FilePathAndroidBitmap(largeIconPath), priority: Priority.max, playSound: true,
+      largeIcon: FilePathAndroidBitmap(largeIconPath), priority: Priority.max, playSound: playSound,
       styleInformation: bigPictureStyleInformation, importance: Importance.max,
-      sound: const RawResourceAndroidNotificationSound('notification'),
+      sound: playSound ? const RawResourceAndroidNotificationSound('notification') : null,
     );
     final NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
     await fln.show(0, title, body, platformChannelSpecifics, payload: notificationBody != null ? jsonEncode(notificationBody.toJson()) : null);
