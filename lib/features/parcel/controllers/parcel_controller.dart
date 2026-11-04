@@ -23,8 +23,11 @@ import 'package:twsylh_user/helper/route_helper.dart';
 import 'package:twsylh_user/util/app_constants.dart';
 import 'package:twsylh_user/common/widgets/custom_snackbar.dart';
 
+import 'package:twsylh_user/features/parcel/domain/models/parcel_route_calculation_result.dart';
 import '../domain/models/parcel_instruction_model.dart';
 import 'package:universal_html/html.dart' as html;
+
+enum ParcelRoutingStatus { initial, loading, success, error }
 
 class ParcelController extends GetxController implements GetxService {
   final ParcelServiceInterface parcelServiceInterface;
@@ -50,6 +53,17 @@ class ParcelController extends GetxController implements GetxService {
 
   double? _distance = -1;
   double? get distance => _distance;
+
+  ParcelRoutingStatus _routingStatus = ParcelRoutingStatus.initial;
+  ParcelRoutingStatus get routingStatus => _routingStatus;
+
+  String? _routingErrorMessage;
+  String? get routingErrorMessage => _routingErrorMessage;
+
+  bool _isDestinationSelected = false;
+  bool get isDestinationSelected => _isDestinationSelected;
+
+  int _distanceRequestToken = 0;
 
   final List<String> _payerTypes = ['sender', 'receiver'];
   List<String> get payerTypes => _payerTypes;
@@ -179,9 +193,26 @@ class ParcelController extends GetxController implements GetxService {
 
   void setDestinationAddress(AddressModel? addressModel, {bool notify = true}) {
     _destinationAddress = addressModel;
+    _isDestinationSelected = addressModel != null;
+    _distanceRequestToken++;
+    _distance = -1;
+    _extraCharge = null;
+    _routingStatus = ParcelRoutingStatus.initial;
+    _routingErrorMessage = null;
     if(notify) {
       update();
     }
+  }
+
+  void resetDestinationSelection() {
+    _isDestinationSelected = false;
+    _destinationAddress = null;
+    _distanceRequestToken++;
+    _distance = -1;
+    _extraCharge = null;
+    _routingStatus = ParcelRoutingStatus.initial;
+    _routingErrorMessage = null;
+    update();
   }
 
   void setLocationFromPlace(String? placeID, String? address, bool? isPickedUp) async {
@@ -261,14 +292,54 @@ class ParcelController extends GetxController implements GetxService {
     }
   }
 
-  void getDistance(AddressModel pickedUpAddress, AddressModel destinationAddress) async {
-    _distance = -1;
-    _distance = await Get.find<CheckoutController>().getDistanceInKM(
-      LatLng(double.parse(pickedUpAddress.latitude!), double.parse(pickedUpAddress.longitude!)),
-      LatLng(double.parse(destinationAddress.latitude!), double.parse(destinationAddress.longitude!)),
-    );
+  Future<void> getDistance(AddressModel pickedUpAddress, AddressModel destinationAddress) async {
+    final int currentToken = ++_distanceRequestToken;
 
-    _extraCharge = Get.find<CheckoutController>().extraCharge;
+    _routingStatus = ParcelRoutingStatus.loading;
+    _routingErrorMessage = null;
+    _distance = -1;
+    _extraCharge = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (currentToken == _distanceRequestToken) {
+        update();
+      }
+    });
+
+    final double? originLat = double.tryParse(pickedUpAddress.latitude ?? '');
+    final double? originLng = double.tryParse(pickedUpAddress.longitude ?? '');
+    final double? destLat   = double.tryParse(destinationAddress.latitude ?? '');
+    final double? destLng   = double.tryParse(destinationAddress.longitude ?? '');
+
+    if (originLat == null || originLng == null || destLat == null || destLng == null ||
+        !originLat.isFinite || !originLng.isFinite || !destLat.isFinite || !destLng.isFinite) {
+      if (currentToken == _distanceRequestToken) {
+        _routingStatus = ParcelRoutingStatus.error;
+        _routingErrorMessage = 'coordinates_parsing_failed';
+        update();
+      }
+      return;
+    }
+
+    final ParcelRouteCalculationResult result = await Get.find<CheckoutController>()
+        .calculateParcelRoadDistanceAndExtraCharge(
+          originLatLng: LatLng(originLat, originLng),
+          destinationLatLng: LatLng(destLat, destLng),
+        );
+
+    // Stale request guard: drop result if a newer request began
+    if (currentToken != _distanceRequestToken) return;
+
+    if (result.isSuccess) {
+      _distance = result.distanceKm;
+      _extraCharge = result.extraCharge;
+      _routingStatus = ParcelRoutingStatus.success;
+      _routingErrorMessage = null;
+    } else {
+      _distance = -1;
+      _extraCharge = null;
+      _routingStatus = ParcelRoutingStatus.error;
+      _routingErrorMessage = result.failureMessage ?? 'distance_calculation_failed';
+    }
 
     update();
   }

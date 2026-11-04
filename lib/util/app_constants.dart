@@ -24,6 +24,13 @@ class AppConstants {
   static const String defaultLatitude = '27.28';
   static const String defaultLongitude = '31.28';
 
+  // Company Headquarters (Fixed Origin for Parcel Orders)
+  static const double hqLatitude = 27.278870;
+  static const double hqLongitude = 31.292358;
+  static const String hqAddressPlaceholder = 'مقر شركة توصيلة - أسيوط';
+  static const String hqContactName = 'مقر شركة توصيلة';
+  static const String hqPhone = '';
+
   static const String baseUrl = 'https://twsylh.com';
   static const String categoryUri = '/api/v1/categories';
   static const String bannerUri = '/api/v1/banners';

@@ -34,6 +34,8 @@ import 'package:twsylh_user/common/widgets/custom_button.dart';
 import 'package:twsylh_user/common/widgets/custom_snackbar.dart';
 import 'package:twsylh_user/common/widgets/custom_text_field.dart';
 import 'package:twsylh_user/common/widgets/menu_drawer.dart';
+import 'package:twsylh_user/features/location/domain/services/location_service_interface.dart';
+import 'package:twsylh_user/util/app_constants.dart';
 
 class ParcelLocationScreen extends StatefulWidget {
   final ParcelCategoryModel category;
@@ -88,8 +90,76 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
   String? _senderCountryDialCode;
   String? _receiverCountryDialCode;
 
+  bool _isHqZoneLoading = false;
+  bool _isHqZoneResolved = false;
+  String? _hqZoneErrorMessage;
+
   // ── Form key for validation ──
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  bool _isValidCoordinate(String? latStr, String? lngStr) {
+    final double? lat = double.tryParse(latStr ?? '');
+    final double? lng = double.tryParse(lngStr ?? '');
+    if (lat == null || lng == null) return false;
+    if (!lat.isFinite || !lng.isFinite) return false;
+    if (lat == 0.0 && lng == 0.0) return false;
+    if (lat < -90.0 || lat > 90.0) return false;
+    if (lng < -180.0 || lng > 180.0) return false;
+    return true;
+  }
+
+  Future<void> _resolveHqZone() async {
+    if (_isHqZoneLoading || !mounted) return;
+
+    setState(() {
+      _isHqZoneLoading = true;
+      _hqZoneErrorMessage = null;
+    });
+
+    try {
+      final ZoneResponseModel response = await Get.find<LocationController>().locationServiceInterface.getZone(
+        AppConstants.hqLatitude.toString(),
+        AppConstants.hqLongitude.toString(),
+        handleError: false,
+      );
+
+      if (!mounted) return;
+
+      if (response.isSuccess && response.zoneIds.isNotEmpty) {
+        final parcelController = Get.find<ParcelController>();
+        final currentPickup = parcelController.pickupAddress;
+        if (currentPickup != null) {
+          final updatedHq = AddressModel(
+            address: currentPickup.address,
+            latitude: currentPickup.latitude,
+            longitude: currentPickup.longitude,
+            contactPersonName: currentPickup.contactPersonName,
+            contactPersonNumber: currentPickup.contactPersonNumber,
+            addressType: currentPickup.addressType,
+            zoneId: response.zoneIds[0],
+            zoneIds: List<int>.from(response.zoneIds),
+            zoneData: List<ZoneData>.from(response.zoneData),
+          );
+          parcelController.setPickupAddress(updatedHq, true);
+        }
+        _isHqZoneResolved = true;
+        _hqZoneErrorMessage = null;
+      } else {
+        _isHqZoneResolved = false;
+        _hqZoneErrorMessage = 'خدمة الطلبات غير متاحة حالياً في نطاق مقر الشركة';
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _isHqZoneResolved = false;
+      _hqZoneErrorMessage = 'تعذر التحقق من نطاق خدمة مقر الشركة، يرجى المحاولة مجدداً';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isHqZoneLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -102,19 +172,36 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
         ? Get.find<AuthController>().getUserCountryCode()
         : CountryCode.fromCountryCode(Get.find<SplashController>().configModel!.country!).dialCode;
 
-    Get.find<ParcelController>().setPickupAddress(AddressHelper.getUserAddressFromSharedPref(), false);
-    Get.find<ParcelController>().setDestinationAddress(AddressHelper.getUserAddressFromSharedPref(), notify: false);
-    Get.find<ParcelController>().setIsPickedUp(true, false);
-    Get.find<ParcelController>().setIsSender(true, false);
+    final AddressModel hqAddress = AddressModel(
+      address: AppConstants.hqAddressPlaceholder,
+      latitude: AppConstants.hqLatitude.toString(),
+      longitude: AppConstants.hqLongitude.toString(),
+      contactPersonName: AppConstants.hqContactName,
+      contactPersonNumber: AppConstants.hqPhone,
+      addressType: 'others',
+      zoneId: null,
+      zoneIds: [],
+      zoneData: [],
+    );
+    Get.find<ParcelController>().setPickupAddress(hqAddress, false);
+
+    final saved = AddressHelper.getUserAddressFromSharedPref();
+    if (saved != null) {
+      Get.find<ParcelController>().setDestinationAddress(saved, notify: false);
+      _receiverAddressController.text = saved.address ?? '';
+    } else {
+      Get.find<ParcelController>().resetDestinationSelection();
+      _receiverAddressController.text = '';
+    }
+
+    Get.find<ParcelController>().setIsPickedUp(false, false);
+    Get.find<ParcelController>().setIsSender(false, false);
     Get.find<ParcelController>().setCountryCode(_countryDialCode!, true);
     Get.find<ParcelController>().setCountryCode(_countryDialCode!, false);
     Get.find<ParcelController>().setOrderNote('', notify: false);
     _orderNoteController.text = '';
 
-    // ── pre-fill address fields ──
-    final saved = AddressHelper.getUserAddressFromSharedPref();
-    _senderAddressController.text   = saved?.address ?? '';
-    _receiverAddressController.text = saved?.address ?? '';
+    _senderAddressController.text = AppConstants.hqAddressPlaceholder;
 
     if (AuthHelper.isLoggedIn() && Get.find<AddressController>().addressList == null) {
       Get.find<AddressController>().getAddressList();
@@ -126,14 +213,18 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
       }
       final profile = Get.find<ProfileController>().userInfoModel;
       if (profile != null) {
-        _senderNameController.text = '${profile.fName ?? ''} ${profile.lName ?? ''}'.trim();
+        _receiverNameController.text = '${profile.fName ?? ''} ${profile.lName ?? ''}'.trim();
+        _senderNameController.text   = '${profile.fName ?? ''} ${profile.lName ?? ''}'.trim();
         _countryDialCode = await splitPhoneNumber(profile.phone ?? '', true);
-        _senderPhoneController.text = await splitPhoneNumber(profile.phone ?? '', false);
+        _receiverPhoneController.text = await splitPhoneNumber(profile.phone ?? '', false);
+        _senderPhoneController.text   = await splitPhoneNumber(profile.phone ?? '', false);
       }
       Get.find<ParcelController>().setCountryCode(_countryDialCode!, true);
       Get.find<ParcelController>().setCountryCode(_countryDialCode!, false);
-      setState(() {});
+      if (mounted) setState(() {});
     }
+
+    _resolveHqZone();
   }
 
   Future<String> splitPhoneNumber(String number, bool returnCountyCode) async {
@@ -212,18 +303,66 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
                   return Column(children: [
 
                     // ════════════════════════════════
-                    //   SENDER SECTION
+                    //   ORIGIN: COMPANY HEADQUARTERS
+                    // ════════════════════════════════
+                    CustomCard(
+                      borderRadius: 0,
+                      isBorder: false,
+                      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                      child: Row(children: [
+                        Container(
+                          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.storefront_rounded, color: Theme.of(context).primaryColor, size: 24),
+                        ),
+                        const SizedBox(width: Dimensions.paddingSizeDefault),
+                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text('origin'.tr.isNotEmpty ? 'origin'.tr : 'نقطة الانطلاق', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).disabledColor)),
+                          const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                          Text(AppConstants.hqContactName, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+                          Text(AppConstants.hqAddressPlaceholder, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor)),
+                        ])),
+                      ]),
+                    ),
+                    if (!_isHqZoneResolved && !_isHqZoneLoading && _hqZoneErrorMessage != null) ...[
+                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                        padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                          border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                          const SizedBox(width: Dimensions.paddingSizeSmall),
+                          Expanded(child: Text(_hqZoneErrorMessage!, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).colorScheme.error))),
+                          TextButton(
+                            onPressed: _resolveHqZone,
+                            child: Text('retry'.tr.isNotEmpty ? 'retry'.tr : 'إعادة المحاولة', style: robotoMedium.copyWith(color: Theme.of(context).colorScheme.error)),
+                          ),
+                        ]),
+                      ),
+                    ],
+                    const SizedBox(height: Dimensions.paddingSizeDefault),
+
+                    // ════════════════════════════════
+                    //   DELIVERY DESTINATION SECTION
                     // ════════════════════════════════
                     _buildLocationCard(
                       parcelController: parcelController,
                       addressController: addressController,
-                      isSender: true,
+                      isSender: false,
                     ),
                     const SizedBox(height: Dimensions.paddingSizeLarge),
 
                     _buildPersonInfoCard(
                       parcelController: parcelController,
-                      isSender: true,
+                      isSender: false,
                     ),
                     const SizedBox(height: Dimensions.paddingSizeLarge),
 
@@ -731,58 +870,44 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
           // ── Inline form validation ──
           if (!(_formKey.currentState?.validate() ?? true)) return;
 
-          // ── Validate Sender ──
-          String senderNum = '${parcelController.senderCountryCode ?? ''}${_senderPhoneController.text.trim()}';
-          PhoneValid senderValid = await CustomValidator.isPhoneValid(senderNum);
-          senderNum = senderValid.phone;
+          // ── Validate Receiver / Customer Contact Info ──
+          String receiverNum = '${parcelController.receiverCountryCode ?? ''}${_receiverPhoneController.text.trim()}';
+          PhoneValid receiverValid = await CustomValidator.isPhoneValid(receiverNum);
+          receiverNum = receiverValid.phone;
 
-          if (parcelController.pickupAddress == null) {
-            showCustomSnackBar('select_pickup_address'.tr); return;
-          } else if (!senderValid.isValid) {
+          if (parcelController.destinationAddress == null || !parcelController.isDestinationSelected) {
+            showCustomSnackBar('select_destination_address'.tr); return;
+          } else if (!_isValidCoordinate(parcelController.destinationAddress!.latitude, parcelController.destinationAddress!.longitude)) {
+            showCustomSnackBar('invalid_destination_coordinates'.tr.isNotEmpty ? 'invalid_destination_coordinates'.tr : 'عنوان التوصيل غير صحيح'); return;
+          } else if (_receiverNameController.text.trim().isEmpty) {
+            showCustomSnackBar('enter_receiver_name'.tr); return;
+          } else if (_receiverPhoneController.text.trim().isEmpty) {
+            showCustomSnackBar('enter_receiver_phone_number'.tr); return;
+          } else if (!receiverValid.isValid) {
             showCustomSnackBar('invalid_phone_number'.tr); return;
-          } else if (AuthHelper.isGuestLoggedIn() && _guestSenderEmailController.text.isEmpty) {
-            showCustomSnackBar('please_enter_sender_email'.tr); return;
+          } else if (AuthHelper.isGuestLoggedIn() && _guestReceiverEmailController.text.isEmpty) {
+            showCustomSnackBar('please_enter_receiver_email'.tr); return;
           } else if (AuthHelper.isGuestLoggedIn() &&
-              !CustomValidator.isEmailValid(_guestSenderEmailController.text.trim())) {
+              !CustomValidator.isEmailValid(_guestReceiverEmailController.text.trim())) {
             showCustomSnackBar('enter_valid_email_address'.tr); return;
           }
 
-          // // ── Validate Receiver ──
-          // String receiverNum = '${parcelController.receiverCountryCode ?? ''}${_receiverPhoneController.text.trim()}';
-          // PhoneValid receiverValid = await CustomValidator.isPhoneValid(receiverNum);
-          // receiverNum = receiverValid.phone;
-          //
-          // if (parcelController.destinationAddress == null) {
-          //   showCustomSnackBar('select_destination_address'.tr); return;
-          // } else if (_receiverNameController.text.isEmpty) {
-          //   showCustomSnackBar('enter_receiver_name'.tr); return;
-          // } else if (_receiverPhoneController.text.isEmpty) {
-          //   showCustomSnackBar('enter_receiver_phone_number'.tr); return;
-          // } else if (!receiverValid.isValid) {
-          //   showCustomSnackBar('invalid_phone_number'.tr); return;
-          // }
-
-          // ── كل حاجة تمام – حفظ وروح ──
-          if (AddressHelper.getUserAddressFromSharedPref() == null) {
-            await AddressHelper.saveUserAddressInSharedPref(parcelController.pickupAddress!);
+          if (_isHqZoneLoading) {
+            showCustomSnackBar('verifying_service_availability'.tr.isNotEmpty ? 'verifying_service_availability'.tr : 'جاري التحقق من نطاق الخدمة...'); return;
+          }
+          if (!_isHqZoneResolved || parcelController.pickupAddress?.zoneId == null || parcelController.pickupAddress?.zoneId == 0) {
+            showCustomSnackBar(_hqZoneErrorMessage ?? 'خدمة الطلبات غير متاحة حالياً، يرجى المحاولة لاحقاً', isError: true); return;
           }
 
           AddressModel pickup = AddressModel(
-            address: parcelController.pickupAddress!.address,
-            additionalAddress: parcelController.pickupAddress!.additionalAddress,
-            addressType: parcelController.pickupAddress!.addressType,
-            contactPersonName: _senderNameController.text.trim(),
-            contactPersonNumber: senderNum,
-            latitude: parcelController.pickupAddress!.latitude,
-            longitude: parcelController.pickupAddress!.longitude,
-            method: parcelController.pickupAddress!.method,
+            address: AppConstants.hqAddressPlaceholder,
+            latitude: AppConstants.hqLatitude.toString(),
+            longitude: AppConstants.hqLongitude.toString(),
+            contactPersonName: AppConstants.hqContactName,
+            contactPersonNumber: AppConstants.hqPhone,
+            addressType: 'others',
             zoneId: parcelController.pickupAddress!.zoneId,
-            id: parcelController.pickupAddress!.id,
             zoneIds: parcelController.pickupAddress!.zoneIds,
-            streetNumber: _senderStreetNumberController.text.trim(),
-            house: _senderHouseController.text.trim(),
-            floor: _senderFloorController.text.trim(),
-            email: _guestSenderEmailController.text.trim(),
             zoneData: parcelController.pickupAddress!.zoneData,
           );
 
@@ -791,7 +916,7 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
             additionalAddress: parcelController.destinationAddress!.additionalAddress,
             addressType: parcelController.destinationAddress!.addressType,
             contactPersonName: _receiverNameController.text.trim(),
-            contactPersonNumber: '',
+            contactPersonNumber: receiverNum,
             latitude: parcelController.destinationAddress!.latitude,
             longitude: parcelController.destinationAddress!.longitude,
             method: parcelController.destinationAddress!.method,
@@ -804,7 +929,6 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
             email: _guestReceiverEmailController.text.trim(),
             zoneData: parcelController.destinationAddress!.zoneData,
           );
-
 
           parcelController.setPickupAddress(pickup, true);
           parcelController.setDestinationAddress(destination);
@@ -872,14 +996,29 @@ class _ParcelLocationScreenState extends State<ParcelLocationScreen> {
                   ),
                   const SizedBox(height: Dimensions.paddingSizeLarge),
 
-                  // ── Sender ──
-                  _buildLocationCard(
-                      parcelController: parcelController,
-                      addressController: addressController,
-                      isSender: true),
-                  const SizedBox(height: Dimensions.paddingSizeLarge),
-                  _buildPersonInfoCard(
-                      parcelController: parcelController, isSender: true),
+                  // ── Origin: Headquarters ──
+                  CustomCard(
+                    borderRadius: Dimensions.radiusDefault,
+                    isBorder: false,
+                    padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                    child: Row(children: [
+                      Container(
+                        padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.storefront_rounded, color: Theme.of(context).primaryColor, size: 24),
+                      ),
+                      const SizedBox(width: Dimensions.paddingSizeDefault),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('origin'.tr.isNotEmpty ? 'origin'.tr : 'نقطة الانطلاق', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).disabledColor)),
+                        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                        Text(AppConstants.hqContactName, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+                        Text(AppConstants.hqAddressPlaceholder, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor)),
+                      ])),
+                    ]),
+                  ),
                   const SizedBox(height: Dimensions.paddingSizeLarge),
 
                   // ── Receiver ──

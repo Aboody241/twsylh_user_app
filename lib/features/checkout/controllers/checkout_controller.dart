@@ -26,6 +26,7 @@ import 'package:twsylh_user/features/checkout/domain/models/place_order_body_mod
 import 'package:twsylh_user/helper/api_error_message_helper.dart';
 import 'package:twsylh_user/features/checkout/domain/models/timeslote_model.dart';
 import 'package:twsylh_user/features/checkout/domain/services/checkout_service_interface.dart';
+import 'package:twsylh_user/features/parcel/domain/models/parcel_route_calculation_result.dart';
 import 'package:twsylh_user/features/checkout/widgets/order_successfull_dialog.dart';
 import 'package:twsylh_user/features/checkout/widgets/partial_pay_dialog_widget.dart';
 import 'package:twsylh_user/features/home/screens/home_screen.dart';
@@ -395,6 +396,36 @@ class CheckoutController extends GetxController implements GetxService {
 
     update();
     return _distance;
+  }
+
+  Future<ParcelRouteCalculationResult> calculateParcelRoadDistanceAndExtraCharge({
+    required LatLng originLatLng,
+    required LatLng destinationLatLng,
+  }) async {
+    try {
+      Response response = await checkoutServiceInterface.getDistanceInMeter(originLatLng, destinationLatLng);
+      if (response.statusCode == 200 && response.body != null) {
+        final dynamic metersRaw = response.body['distanceMeters'];
+        if (metersRaw != null) {
+          final double? distanceMeters = double.tryParse(metersRaw.toString());
+          if (distanceMeters != null && distanceMeters.isFinite && distanceMeters >= 0) {
+            final double roadDistanceKm = distanceMeters / 1000.0;
+            final double extraCharge = await checkoutServiceInterface.getExtraCharge(roadDistanceKm);
+            return ParcelRouteCalculationResult.success(
+              distanceKm: roadDistanceKm,
+              extraCharge: extraCharge,
+            );
+          }
+        }
+      }
+      return const ParcelRouteCalculationResult.failure(
+        failureMessage: 'routing_service_unavailable',
+      );
+    } catch (e) {
+      return ParcelRouteCalculationResult.failure(
+        failureMessage: e.toString(),
+      );
+    }
   }
 
   double parseDuration(String duration) {

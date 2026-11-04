@@ -68,7 +68,9 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
   void initState() {
     super.initState();
 
-    initCall();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      initCall();
+    });
   }
 
   void initCall(){
@@ -127,7 +129,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
             double dmTips = 0;
             double additionalCharge =  Get.find<SplashController>().configModel!.additionalChargeStatus! ? Get.find<SplashController>().configModel!.additionCharge! : 0;
 
-            if(parcelController.distance != -1 && parcelController.extraCharge != null) {
+            if(parcelController.distance != -1 && parcelController.extraCharge != null && parcelController.routingStatus == ParcelRoutingStatus.success) {
               charge = _calculateParcelDeliveryCharge(parcelController: parcelController, parcelCategory: widget.parcelCategory, zoneId: widget.pickedUpAddress.zoneId!);
 
               if(checkoutController.isFirstTime){
@@ -158,7 +160,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
               }
 
               dmTips = parcelController.tips;
-              total = charge + dmTips + additionalCharge + checkoutController.orderTax!;
+              total = charge + dmTips + additionalCharge + (checkoutController.orderTax ?? 0.0);
             }
 
             return GetBuilder<CheckoutController>(builder: (checkoutController) {
@@ -217,6 +219,39 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                     CardWidget(child: TripFromToCard(pickUpAddress: widget.pickedUpAddress, destinationAddress: widget.destinationAddress)),
                     const SizedBox(height: Dimensions.paddingSizeDefault),
 
+                    if (parcelController.routingStatus == ParcelRoutingStatus.error) ...[
+                      Container(
+                        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                          border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(0.5)),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.error_outline_rounded, color: Theme.of(context).colorScheme.error, size: 24),
+                          const SizedBox(width: Dimensions.paddingSizeSmall),
+                          Expanded(
+                            child: Text(
+                              'failed_to_calculate_delivery_distance'.tr.isNotEmpty
+                                  ? 'failed_to_calculate_delivery_distance'.tr
+                                  : 'تعذر حساب مسافة التوصيل، يرجى إعادة المحاولة',
+                              style: robotoRegular.copyWith(color: Theme.of(context).colorScheme.error),
+                            ),
+                          ),
+                          CustomButton(
+                            buttonText: 'retry'.tr.isNotEmpty ? 'retry'.tr : 'إعادة المحاولة',
+                            width: 100,
+                            height: 35,
+                            onPressed: () {
+                              Get.find<CheckoutController>().updateFirstTime();
+                              parcelController.getDistance(widget.pickedUpAddress, widget.destinationAddress);
+                            },
+                          ),
+                        ]),
+                      ),
+                      const SizedBox(height: Dimensions.paddingSizeDefault),
+                    ],
+
                     CardWidget(child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
 
                       Row(children: [
@@ -245,7 +280,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                             parcelController.distance == -1 ? 'calculating'.tr : PriceConverter.convertPrice(charge),
                             style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).primaryColor), textDirection: TextDirection.ltr,
                           ),
-                          Text('delivery_fee'.tr, style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.5))),
+                          Text('estimated_transportation_fee'.tr, style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.5))),
                         ]),
                       ])
                     ])),
@@ -530,7 +565,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                         const SizedBox(height: Dimensions.paddingSizeSmall),
 
                         Row(children: [
-                          Text('delivery_fee'.tr, style: robotoRegular),
+                          Text('estimated_transportation_fee'.tr, style: robotoRegular),
 
                           checkoutController.surgePrice?.customerNoteStatus == 1 ? CustomToolTip(
                             message: checkoutController.surgePrice?.customerNote ?? '',
@@ -592,6 +627,35 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
 
                     const CheckoutCondition(isParcel: true),
 
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        vertical: Dimensions.paddingSizeSmall,
+                      ),
+                      padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                        border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(0.35)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 20, color: Theme.of(context).colorScheme.error),
+                          const SizedBox(width: Dimensions.paddingSizeSmall),
+                          Expanded(
+                            child: Text(
+                              'transportation_fee_notice'.tr,
+                              style: robotoRegular.copyWith(
+                                fontSize: Dimensions.fontSizeSmall,
+                                height: 1.4,
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     SizedBox(height: ResponsiveHelper.isDesktop(context) ? Dimensions.paddingSizeLarge : 0),
                     ResponsiveHelper.isDesktop(context) ? _bottomButton(parcelController, total, isGuestLoggedIn: isGuestLoggedIn) : const SizedBox(),
 
@@ -640,7 +704,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
             isLoading: parcelController.isLoading,
             margin: ResponsiveHelper.isDesktop(context) ? null : const EdgeInsets.all(Dimensions.paddingSizeSmall),
             onPressed: parcelController.acceptTerms ? () {
-              if(parcelController.distance == -1) {
+              if(parcelController.distance == -1 || parcelController.extraCharge == null || parcelController.routingStatus != ParcelRoutingStatus.success) {
                 showCustomSnackBar('delivery_fee_not_set_yet'.tr);
               }else if(parcelController.tips < 0) {
                 showCustomSnackBar('tips_can_not_be_negative'.tr);

@@ -37,7 +37,7 @@ class CheckoutRepository implements CheckoutRepositoryInterface {
   Future<Response> getDistanceInMeter(LatLng originLatLng, LatLng destinationLatLng) async {
     return await apiClient.getData(
       '${AppConstants.distanceMatrixUri}?origin_lat=${originLatLng.latitude}&origin_lng=${originLatLng.longitude}'
-          '&destination_lat=${destinationLatLng.latitude}&destination_lng=${destinationLatLng.longitude}&mode=WALK',
+          '&destination_lat=${destinationLatLng.latitude}&destination_lng=${destinationLatLng.longitude}&mode=DRIVE',
       handleError: false,
     );
   }
@@ -99,9 +99,11 @@ class CheckoutRepository implements CheckoutRepositoryInterface {
   Future<List<OfflineMethodModel>?> _getOfflineMethodList() async {
     List<OfflineMethodModel>? offlineMethodList;
     Response response = await apiClient.getData(AppConstants.offlineMethodListUri);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 && response.body is List) {
       offlineMethodList = [];
-      response.body.forEach((method) => offlineMethodList!.add(OfflineMethodModel.fromJson(method)));
+      for (var method in response.body) {
+        offlineMethodList.add(OfflineMethodModel.fromJson(method));
+      }
     }
     return offlineMethodList;
   }

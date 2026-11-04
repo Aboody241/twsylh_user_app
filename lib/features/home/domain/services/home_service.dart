@@ -8,7 +8,7 @@ class HomeService implements HomeServiceInterface{
 
   @override
   Future<List<CashBackModel>> getCashBackOfferList() async {
-    return await homeRepositoryInterface.getList();
+    return (await homeRepositoryInterface.getList()) ?? [];
   }
 
   @override

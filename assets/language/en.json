@@ -2289,5 +2289,10 @@
   "something_went_wrong": "Something went wrong. Please try again.",
   "order_already_accepted_by_another_deliveryman": "Sorry, this order has already been accepted by another delivery person!",
   "cannot_accept_this_order_now": "Cannot accept this order at the moment.",
-  "orders_copied_successfully": "Orders copied successfully."
+  "orders_copied_successfully": "Orders copied successfully.",
+  "estimated_transportation_fee": "Estimated Fee Based on Distance",
+  "transportation_fee_notice": "This is an estimated price based on distance only. The price may be updated based on weight, transit details, or order preparation time, and does not include the cost of products purchased on your behalf.",
+  "failed_to_calculate_delivery_distance": "Failed to calculate delivery distance. Please try again.",
+  "invalid_destination_coordinates": "Invalid delivery coordinates. Please select a valid location on the map.",
+  "verifying_service_availability": "Verifying service availability in the area..."
 }
