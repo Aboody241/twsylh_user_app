@@ -144,32 +144,52 @@ class _ParcelCategoryScreenState extends State<ParcelCategoryScreen> {
                       ),
                       SizedBox(height: isDesktop ? Dimensions.paddingSizeExtraLarge : Dimensions.paddingSizeLarge),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : Dimensions.paddingSizeLarge),
-                        child: Text('experience_the_best_with_us'.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeSmall),
-
-                      parcelController.whyChooseDetails != null
-                          ? isDesktop ? webExperienceView(isDesktop, parcelController) : mobileExperienceView(isDesktop, parcelController)
-                        : ParcelShimmer(isEnabled: parcelController.parcelCategoryList == null, isDeliveryItem: false),
-                      const SizedBox(height: Dimensions.paddingSizeLarge),
-
-                      Align(
-                        alignment: Get.find<LocalizationController>().isLtr ? Alignment.centerLeft : Alignment.centerRight,
-                        child: Padding(
+                      if (parcelController.whyChooseDetails != null && parcelController.whyChooseDetails!.banners != null && parcelController.whyChooseDetails!.banners!.isNotEmpty) ...[
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : Dimensions.paddingSizeLarge),
-                          child: Text('easiest_way_to_get_services'.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
+                          child: Text('experience_the_best_with_us'.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
                         ),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                        const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal:isDesktop ? 0 : Dimensions.paddingSizeLarge),
-                        child: parcelController.videoContentDetails != null ? isDesktop ? Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                        isDesktop ? webExperienceView(isDesktop, parcelController) : mobileExperienceView(isDesktop, parcelController),
+                        const SizedBox(height: Dimensions.paddingSizeLarge),
+                      ],
 
-                          showVideoAndServices ? Expanded(
-                            child: parcelController.videoContentDetails!.bannerType == 'image' ? ClipRRect(
+                      if (parcelController.videoContentDetails != null && (showVideoAndServices || (parcelController.videoContentDetails!.bannerContents != null && parcelController.videoContentDetails!.bannerContents!.isNotEmpty))) ...[
+                        Align(
+                          alignment: Get.find<LocalizationController>().isLtr ? Alignment.centerLeft : Alignment.centerRight,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : Dimensions.paddingSizeLarge),
+                            child: Text('easiest_way_to_get_services'.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
+                          ),
+                        ),
+                        const SizedBox(height: Dimensions.paddingSizeSmall),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : Dimensions.paddingSizeLarge),
+                          child: isDesktop ? Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+
+                            showVideoAndServices ? Expanded(
+                              child: parcelController.videoContentDetails!.bannerType == 'image' ? ClipRRect(
+                                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                                child: CustomImage(
+                                  image: '${parcelController.videoContentDetails!.bannerImageFullUrl}',
+                                ),
+                              ) : parcelController.videoContentDetails!.bannerType == 'video' ? GetServiceVideoWidget(youtubeVideoUrl: parcelController.videoContentDetails!.bannerVideo ?? '', fileVideoUrl: '',) : GetServiceVideoWidget(
+                                youtubeVideoUrl: '',
+                                fileVideoUrl: '${parcelController.videoContentDetails!.bannerVideoContentFullUrl}',
+                              ),
+                            ) : const SizedBox(),
+                            const SizedBox(width: 125),
+
+                            Expanded(
+                              child: ServiceInfoListWidget(
+                                parcelController: parcelController,
+                              ),
+                            ),
+                          ]) : Column(children: [
+
+                            showVideoAndServices ? (parcelController.videoContentDetails!.bannerType == 'image' ? ClipRRect(
                               borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                               child: CustomImage(
                                 image: '${parcelController.videoContentDetails!.bannerImageFullUrl}',
@@ -177,32 +197,14 @@ class _ParcelCategoryScreenState extends State<ParcelCategoryScreen> {
                             ) : parcelController.videoContentDetails!.bannerType == 'video' ? GetServiceVideoWidget(youtubeVideoUrl: parcelController.videoContentDetails!.bannerVideo ?? '', fileVideoUrl: '',) : GetServiceVideoWidget(
                               youtubeVideoUrl: '',
                               fileVideoUrl: '${parcelController.videoContentDetails!.bannerVideoContentFullUrl}',
-                            ),
-                          ) : const SizedBox(),
-                          const SizedBox(width: 125),
+                            )) : const SizedBox(),
 
-                          Expanded(
-                            child: ServiceInfoListWidget(
-                              parcelController: parcelController,
-                            ),
-                          ),
-                        ]) : Column(children: [
+                            if (showVideoAndServices) const SizedBox(height: Dimensions.paddingSizeLarge),
 
-                          parcelController.videoContentDetails!.bannerType == 'image' ? ClipRRect(
-                            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                            child: CustomImage(
-                              image: '${parcelController.videoContentDetails!.bannerImageFullUrl}',
-                            ),
-                          ) : parcelController.videoContentDetails!.bannerType == 'video' ? GetServiceVideoWidget(youtubeVideoUrl: parcelController.videoContentDetails!.bannerVideo ?? '', fileVideoUrl: '',) : GetServiceVideoWidget(
-                            youtubeVideoUrl: '',
-                            fileVideoUrl: '${parcelController.videoContentDetails!.bannerVideoContentFullUrl}',
-                          ),
-
-                          const SizedBox(height: Dimensions.paddingSizeLarge),
-
-                          ServiceInfoListWidget(parcelController: parcelController),
-                        ]) : const VideoContentDetailsShimmer(),
-                      ),
+                            ServiceInfoListWidget(parcelController: parcelController),
+                          ]),
+                        ),
+                      ],
 
                       SizedBox(height: isDesktop ? 0 : 100),
                     ]))),
