@@ -29,14 +29,17 @@ class DeliverItemCardWidget extends StatelessWidget {
       child: isDeliverItem ? CustomInkWell(
         onTap: onTap,
         radius: Dimensions.radiusDefault,
-        padding: EdgeInsets.symmetric(vertical: Dimensions.paddingSizeExtraSmall, horizontal: Dimensions.paddingSizeSmall),
-        child: Column(children: [
+        padding: EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall, horizontal: Dimensions.paddingSizeDefault),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           CustomImage(
             image: image,
-            width: 45,
+            width: 55,
+            height: 55,
           ),
+          const SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
-          Text(itemName, maxLines: 1, overflow: TextOverflow.ellipsis, style: robotoMedium),
+          Text(itemName, maxLines: 1, overflow: TextOverflow.ellipsis, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+          const SizedBox(height: 2),
 
           Text(
             description,

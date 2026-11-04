@@ -74,10 +74,10 @@ class _ParcelCategoryScreenState extends State<ParcelCategoryScreen> {
                       parcelController.parcelCategoryList != null ? parcelController.parcelCategoryList!.isNotEmpty ? GridView.builder(
                         controller: ScrollController(),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: isDesktop ? 3 : 2,
+                          crossAxisCount: isDesktop ? 3 : (parcelController.parcelCategoryList!.length == 1 ? 1 : 2),
                           crossAxisSpacing: isDesktop ? Dimensions.paddingSizeLarge : Dimensions.paddingSizeSmall,
                           mainAxisSpacing: isDesktop ? Dimensions.paddingSizeLarge : Dimensions.paddingSizeSmall,
-                          mainAxisExtent: isDesktop ? 100 : 110,
+                          mainAxisExtent: isDesktop ? 100 : (parcelController.parcelCategoryList!.length == 1 ? 130 : 110),
                         ),
                         itemCount: parcelController.parcelCategoryList!.length,
                         shrinkWrap: true,

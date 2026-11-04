@@ -402,6 +402,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                     ) : const SizedBox.shrink(),
                     SizedBox(height: (Get.find<SplashController>().configModel!.dmTipsStatus == 1) ? Dimensions.paddingSizeDefault : 0),
 
+                    /*
                     CardWidget(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Text('who_will_pay'.tr, style: robotoMedium),
@@ -447,6 +448,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                       ]),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeDefault),
+                    */
 
                     CardWidget(
                       child: Column(children: [
