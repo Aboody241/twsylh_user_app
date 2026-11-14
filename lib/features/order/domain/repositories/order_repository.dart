@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get_connect/connect.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:twsylh_user/api/api_client.dart';
@@ -23,10 +24,18 @@ class OrderRepository implements OrderRepositoryInterface {
 
   @override
   Future<Response> trackOrder(String? orderID, String? guestId, {String? contactNumber}) async {
-    return await apiClient.getData(
+    Response response = await apiClient.getData(
       '${AppConstants.trackUri}$orderID${guestId != null ? '&guest_id=$guestId' : ''}'
           '${contactNumber != null ? '&contact_number=$contactNumber' : ''}',
     );
+    if (kDebugMode && response.body is Map) {
+      final map = response.body as Map;
+      final priceReason = map['price_update_reason'] ?? map['price_reason'] ?? map['reason'] ?? map['order_update_reason'];
+      if (priceReason != null) {
+        debugPrint('====> Order price update reason found: $priceReason');
+      }
+    }
+    return response;
   }
 
   @override

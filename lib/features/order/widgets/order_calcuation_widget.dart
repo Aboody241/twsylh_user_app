@@ -85,12 +85,51 @@ class OrderCalculationWidget extends StatelessWidget {
                 ),
               ]),
             ) : const SizedBox(),
-            SizedBox(height: parcel &&  orderController.orderDetails!.isNotEmpty ? Dimensions.paddingSizeLarge : 0),
+            SizedBox(height: parcel && (orderController.orderDetails?.isNotEmpty ?? false) ? Dimensions.paddingSizeLarge : 0),
 
             SizedBox(height: (order.orderAttachmentFullUrl != null && order.orderAttachmentFullUrl!.isNotEmpty ) ? Dimensions.paddingSizeLarge : 0),
 
             Text('billing_summary'.tr, style: robotoSemiBold),
             const SizedBox(height: Dimensions.paddingSizeSmall),
+
+            if (order.priceUpdateReason != null && order.priceUpdateReason!.trim().isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+                padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: Theme.of(context).primaryColor, size: 20),
+                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'سبب تعديل السعر بواسطة المندوب:',
+                            style: robotoMedium.copyWith(
+                              fontSize: Dimensions.fontSizeSmall,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            order.priceUpdateReason!,
+                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             Column(children: [
               parcel ? Column(children: [

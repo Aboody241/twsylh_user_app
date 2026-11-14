@@ -101,6 +101,7 @@ class OrderModel {
   double? bringChangeAmount;
   String? cancellationNote;
   List<Reviews>? reviews;
+  String? priceUpdateReason;
 
   OrderModel({
     this.id,
@@ -167,6 +168,7 @@ class OrderModel {
     this.bringChangeAmount,
     this.cancellationNote,
     this.reviews,
+    this.priceUpdateReason,
   });
 
   OrderModel.fromJson(Map<String, dynamic> json) {
@@ -221,6 +223,7 @@ class OrderModel {
     prescriptionOrder = json['prescription_order'];
     taxStatus = json['tax_status'] == 'included' ? true : false;
     cancellationReason = json['cancellation_reason'];
+    priceUpdateReason = json['price_update_reason'] ?? json['price_reason'] ?? json['reason'] ?? json['order_update_reason'] ?? json['edit_price_reason'];
     processingTime = json['processing_time'];
     cutlery = json['cutlery'];
     unavailableItemNote = json['unavailable_item_note'];
@@ -341,6 +344,7 @@ class OrderModel {
     }
     data['bring_change_amount'] = bringChangeAmount;
     data['cancellation_note'] = cancellationNote;
+    data['price_update_reason'] = priceUpdateReason;
     if (reviews != null) {
       data['reviews'] = reviews!.map((v) => v.toJson()).toList();
     }
