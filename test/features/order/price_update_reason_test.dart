@@ -188,5 +188,50 @@ void main() {
 
       expect(find.text('سبب تعديل السعر بواسطة المندوب:'), findsNothing);
     });
+
+    testWidgets('uses updated deliveryCharge parameter instead of stale order.deliveryCharge', (tester) async {
+      final order = OrderModel(
+        id: 103,
+        orderAmount: 60,
+        deliveryCharge: 50, // Old delivery charge from database
+        dmTips: 0,
+        priceUpdateReason: 'انتقال من سوق لآخر',
+      );
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: OrderCalculationWidget(
+                orderController: orderController,
+                order: order,
+                ongoing: true,
+                parcel: true,
+                prescriptionOrder: false,
+                deliveryCharge: 60, // Updated delivery charge reflecting order_amount
+                itemsPrice: 0,
+                discount: 0,
+                couponDiscount: 0,
+                tax: 0,
+                addOns: 0,
+                dmTips: 0,
+                taxIncluded: false,
+                subTotal: 0,
+                total: 60,
+                bottomView: const SizedBox(),
+                extraPackagingAmount: 0,
+                referrerBonusAmount: 0,
+                timerCancel: () {},
+                startApiCall: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify that the updated 60 is shown in the delivery charge, not the stale 50
+      expect(find.textContaining('60'), findsWidgets);
+      expect(find.textContaining('50'), findsNothing);
+    });
   });
 }

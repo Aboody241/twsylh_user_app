@@ -220,7 +220,26 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
             }
             double subTotal = itemsPrice + addOns;
-            double total = itemsPrice + addOns - discount + (taxIncluded ? 0 : tax) + deliveryCharge - couponDiscount + dmTips + additionalCharge + extraPackagingCharge - referrerBonusAmount;
+            double calculatedTotal = itemsPrice + addOns - discount + (taxIncluded ? 0 : tax) + deliveryCharge - couponDiscount + dmTips + additionalCharge + extraPackagingCharge - referrerBonusAmount;
+            double total = calculatedTotal;
+
+            if (order != null && order.orderAmount != null && order.orderAmount! > 0) {
+              if (parcel) {
+                double effectiveDelivery = order.orderAmount! - dmTips - additionalCharge;
+                if (effectiveDelivery > 0) {
+                  deliveryCharge = effectiveDelivery;
+                }
+                total = order.orderAmount!;
+              } else {
+                if ((order.orderAmount! - calculatedTotal).abs() > 0.01) {
+                  double diff = order.orderAmount! - calculatedTotal;
+                  if (diff > 0) {
+                    deliveryCharge += diff;
+                  }
+                  total = order.orderAmount!;
+                }
+              }
+            }
 
             return orderController.orderDetails != null && order != null && orderController.trackModel != null ? Column(children: [
 
