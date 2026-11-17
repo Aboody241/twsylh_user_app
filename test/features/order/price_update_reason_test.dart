@@ -74,6 +74,22 @@ void main() {
       expect(order.priceUpdateReason, 'انتقال من سوق لآخر');
     });
 
+    test('parses amount_change_reason directly from backend JSON correctly', () {
+      final json = {
+        'id': 100125,
+        'order_amount': 25.0,
+        'coupon_discount_amount': 0.0,
+        'total_tax_amount': 0.0,
+        'delivery_charge': 25.0,
+        'store_discount_amount': 0.0,
+        'dm_tips': 0.0,
+        'amount_change_reason': 'وزن الأوردر أكثر من 10 كجم',
+      };
+
+      final order = OrderModel.fromJson(json);
+      expect(order.priceUpdateReason, 'وزن الأوردر أكثر من 10 كجم');
+    });
+
     test('parses reason fallback from JSON correctly', () {
       final json = {
         'id': 102,
